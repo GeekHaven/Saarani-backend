@@ -81,4 +81,38 @@ app.post('/events', function (req, res) {
 
 })
 
+
+app.delete('/events/:id', (req, res) => {
+    var idToken = req.body.token;
+    admin.auth().verifyIdToken(idToken)
+        .then( (decodedToken) => {
+            let uid = decodedToken.uid;
+            admin.auth().getUser(uid)
+                .then( (userRecord) => {
+                    var eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                        if (snapshot.exists()){
+                            var event = snapshot.val()
+                            if ( event.byID == userRecord.uid ) {
+                                db.ref(`events/${req.params.id}`).remove()
+                            }
+                            else{
+                                console.log("Not Authorized")
+                            }
+                        }
+                        else{
+                            console.log("Event does not exists")
+                        }
+                    })
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    res.json({error: error.code});
+                });
+        })
+        .catch(function (error) {
+            console.log(error);
+            res.json({error: error.code});
+        });
+})
+
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))
