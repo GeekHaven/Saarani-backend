@@ -29,13 +29,18 @@ app.get('/events', function(req, res) {
 })
 
 app.get('/events/:id', function(req, res) {
-    var eventRef = ref.child("events");
-    eventRef.once("value", function(snapshot) {
-        res.json(snapshot.val()[req.params.id]);
-      }, function (error) {
+    var eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()){
+            var event = snapshot.val();
+            res.json(event)
+        }
+        else{
+            console.log("Event does not exists")
+        }
+    }, (error) => {
         console.log("The read failed: " + error.code);
         res.json({error: error.code});
-      });
+    })
 })
 
 app.post('/events', function (req, res) {
@@ -102,6 +107,9 @@ app.delete('/events/:id', (req, res) => {
                         else{
                             console.log("Event does not exists")
                         }
+                    }, (error) => {
+                        console.log("The read failed: " + error.code);
+                        res.json({error: error.code});
                     })
                 })
                 .catch(function (error) {
