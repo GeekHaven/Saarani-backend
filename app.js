@@ -8,21 +8,21 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-var serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = require("./serviceAccountKey.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: "https://calender-app-b8f90.firebaseio.com"
 });
 
-var db = admin.database();
-var ref = db.ref("/");
+const db = admin.database();
+const ref = db.ref("/");
 
 app.get('/events', (req, res) => {
     let eventRef = ref.child("events").once("value", (snapshot) => {
         res.json(snapshot.val());
     }, (error) => {
-        console.log("The read failed: " + error.code);
+        console.log(`The read failed: ${error.code}`);
         res.json({
             error: error.code
         });
@@ -41,7 +41,7 @@ app.get('/events/:id', (req, res) => {
             });
         }
     }, (error) => {
-        console.log("The read failed: " + error.code);
+        console.log(`The read failed: ${error.code}`);
         res.json({
             error: error.code
         });
@@ -51,10 +51,10 @@ app.get('/events/:id', (req, res) => {
 app.post('/events', (req, res) => {
     let idToken = req.body.token;
     admin.auth().verifyIdToken(idToken)
-        .then(function (decodedToken) {
+        .then(decodedToken => {
             let uid = decodedToken.uid;
             admin.auth().getUser(uid)
-                .then(function (userRecord) {
+                .then(userRecord => {
                     let name = req.body.name;
                     let byID = userRecord.uid;
                     let byName = userRecord.displayName;
@@ -80,13 +80,13 @@ app.post('/events', (req, res) => {
                     eventRef.push(obj);
                     res.json(obj);
                 })
-                .catch(function (error) {
+                .catch(error => {
                     console.log("Error fetching user data:", error);
                     res.json({
                         error: error.code
                     });
                 });
-        }).catch(function (error) {
+        }).catch(error => {
             console.log(error);
             res.json({
                 error: error.code
@@ -105,7 +105,7 @@ app.delete('/events/:id', (req, res) => {
                 .then((userRecord) => {
                     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                         if (snapshot.exists()) {
-                            var event = snapshot.val()
+                            const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
                                 db.ref(`events/${req.params.id}`).remove();
                                 res.sendStatus(200);
@@ -122,20 +122,20 @@ app.delete('/events/:id', (req, res) => {
                             });
                         }
                     }, (error) => {
-                        console.log("The read failed: " + error.code);
+                        console.log(`The read failed: ${error.code}`);
                         res.json({
                             error: error.code
                         });
                     })
                 })
-                .catch(function (error) {
+                .catch(error => {
                     console.log(error);
                     res.json({
                         error: error.code
                     });
                 });
         })
-        .catch(function (error) {
+        .catch(error => {
             console.log(error);
             res.json({
                 error: error.code
