@@ -1,0 +1,19 @@
+{
+  "name": "saarani-backend",
+  "version": "1.0.0",
+  "description": "The backend for common schedule app of IIITA, Saarani",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GeekHaven/Saarani-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GeekHaven/Saarani-backend/issues"
+  },
+  "homepage": "https://github.com/GeekHaven/Saarani-backend#readme"
+}
