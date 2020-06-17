@@ -30,7 +30,7 @@ router.post('/check', (req, res) => {
             let uid = decodedToken.uid;
             admin.auth().getUser(uid)
                 .then(userRecord => {
-                    const initials = userRecord.email.split("@")[0];
+                    const initials = userRecord.email.split("@")[0].split(".")[0];
                     let societyRef = db.ref(`societies/${initials}`).once("value", snapshot => {
                         if (snapshot.exists()) {
                             let society = snapshot.val()
