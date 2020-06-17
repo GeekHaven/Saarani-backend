@@ -23,6 +23,25 @@ router.get('/', (req, res) => {
     });
 })
 
+router.get('/:uid', (req, res) => {
+    const societyRef = db.ref('societies/').orderByChild("uid").equalTo(req.params.uid).once("value", snapshot => {
+        if (snapshot.exists()) {
+            let society = snapshot.val();
+            res.json(society)
+        } else {
+            console.log("Society does not exist");
+            res.json({
+                error: "Society does not exist"
+            });
+        }
+    }, (error) => {
+        console.log(`The read failed: ${error.code}`);
+        res.json({
+            error: error.code
+        });
+    })
+})
+
 router.post('/check', (req, res) => {
     let idToken = req.body.token;
     admin.auth().verifyIdToken(idToken)
@@ -36,7 +55,7 @@ router.post('/check', (req, res) => {
                             let society = snapshot.val()
                             if (!society.uid) {
                                 const updates = {};
-                                updates[`/societies/${initials}/id`] = userRecord.uid;
+                                updates[`/societies/${initials}/uid`] = userRecord.uid;
                                 db.ref().update(updates);
                             }
                             res.json({
