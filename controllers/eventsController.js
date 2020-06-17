@@ -76,9 +76,12 @@ router.post('/', (req, res) => {
                             title: "New Event by " + byName,
                             body: name + ", " + date + " " + time
                         },
-                        notification: {
-                            title: "New Event by " + byName,
-                            body: name + ", " + date + " " + time
+                        android: {
+                            notification: {
+                                title: "New Event by " + byName,
+                                body: name + ", " + date + " " + time,
+                                image: userRecord.photoURL
+                            }
                         },
                         topic: "Event"
                     };
