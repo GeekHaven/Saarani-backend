@@ -1,4 +1,5 @@
 let admin = require("../initFirebase.js");
+let sendNotification = require("../utilities/sendNotification.js")
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
@@ -71,27 +72,7 @@ router.post('/', (req, res) => {
                     obj.markedGoingUsers = markedGoingUsers;
                     if (attachments) obj.attachments = attachments;
                     eventRef.push(obj);
-                    let message = {
-                        data: {
-                            title: "New Event by " + byName,
-                            body: name + ", " + date + " " + time
-                        },
-                        android: {
-                            notification: {
-                                title: "New Event by " + byName,
-                                body: name + ", " + date + " " + time,
-                                image: userRecord.photoURL
-                            }
-                        },
-                        topic: "Event"
-                    };
-                    admin.messaging().send(message)
-                        .then((response) => {
-                            console.log("Successfully sent message:", response);
-                        })
-                        .catch((error) => {
-                            console.log("Error sending message:", error);
-                        });
+                    sendNotification("New Event by " + byName, name + ", " + date + " " + time, userRecord.photoURL, "Event");
                     res.json(obj);
                 })
                 .catch(error => {
@@ -120,6 +101,7 @@ router.delete('/:id', (req, res) => {
                         if (snapshot.exists()) {
                             const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
+                                sendNotification(event.name + " has been cancelled", "Updated by " + event.byName, userRecord.photoURL, "Event");
                                 db.ref(`events/${req.params.id}`).remove();
                                 res.sendStatus(200);
                             } else {
