@@ -4,6 +4,7 @@ let app = express()
 let port = process.env.PORT || 3000
 let bodyParser = require('body-parser')
 let eventsController = require('./controllers/eventsController')
+let societiesController = require('./controllers/societiesController')
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
@@ -13,5 +14,6 @@ const db = admin.database();
 const ref = db.ref("/");
 
 app.use("/events", eventsController);
+app.use("/societies", societiesController)
 
 app.listen(port, () => console.log(`Calendar app listening at http://localhost:${port}`))
