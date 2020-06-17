@@ -71,6 +71,24 @@ router.post('/', (req, res) => {
                     obj.markedGoingUsers = markedGoingUsers;
                     if (attachments) obj.attachments = attachments;
                     eventRef.push(obj);
+                    let message = {
+                        data: {
+                            title: "New Event by " + byName,
+                            body: name + ", " + date + " " + time
+                        },
+                        notification: {
+                            title: "New Event by " + byName,
+                            body: name + ", " + date + " " + time
+                        },
+                        topic: "Event"
+                    };
+                    admin.messaging().send(message)
+                        .then((response) => {
+                            console.log("Successfully sent message:", response);
+                        })
+                        .catch((error) => {
+                            console.log("Error sending message:", error);
+                        });
                     res.json(obj);
                 })
                 .catch(error => {
