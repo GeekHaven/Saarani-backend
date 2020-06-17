@@ -2,6 +2,7 @@ let admin = require("../initFirebase.js");
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
+const polpulateUsers = require("./populateUsers.js")
 
 router.use(bodyParser.urlencoded({
     extended: true
@@ -48,6 +49,9 @@ router.post('/', (req, res) => {
             let uid = decodedToken.uid;
             admin.auth().getUser(uid)
                 .then(userRecord => {
+
+                    polpulateUsers(userRecord)
+
                     let name = req.body.name;
                     let byID = userRecord.uid;
                     let byName = userRecord.displayName;
@@ -95,6 +99,9 @@ router.delete('/:id', (req, res) => {
             let uid = decodedToken.uid;
             admin.auth().getUser(uid)
                 .then((userRecord) => {
+
+                    polpulateUsers(userRecord)
+
                     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                         if (snapshot.exists()) {
                             const event = snapshot.val();
