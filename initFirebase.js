@@ -4,7 +4,7 @@ const serviceAccount = require("./serviceAccountKey.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://calender-app-b8f90.firebaseio.com"
+    databaseURL: "https://calendarapp-680df.firebaseio.com"
 });
 
 module.exports = admin
