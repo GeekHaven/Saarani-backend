@@ -56,8 +56,6 @@ router.post('/', (req, res) => {
                     let venue = req.body.venue;
                     let date = req.body.date;
                     let time = req.body.time;
-                    let interestedUsers = {};
-                    let markedGoingUsers = {};
                     let attachments = req.body.attachments;
                     let eventRef = ref.child("events");
                     let obj = {};
@@ -99,8 +97,8 @@ router.delete('/:id', (req, res) => {
                         if (snapshot.exists()) {
                             const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
-                                sendNotification(event.name + " has been cancelled", "Updated by " + event.byName, userRecord.photoURL, "Event");
                                 db.ref(`events/${req.params.id}`).remove();
+                                sendNotification(event.name + " has been cancelled", "Updated by " + event.byName, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized");
@@ -119,6 +117,60 @@ router.delete('/:id', (req, res) => {
                         res.json({
                             error: error.code
                         });
+                    })
+                })
+                .catch(error => {
+                    console.log(error);
+                    res.json({
+                        error: error.code
+                    });
+                });
+        })
+        .catch(error => {
+            console.log(error);
+            res.json({
+                error: error.code
+            });
+        });
+})
+
+router.put('/:id', (req, res) => {
+    let idToken = req.body.token;
+    admin.auth().verifyIdToken(idToken)
+        .then(decodedToken => {
+            let uid = decodedToken.uid;
+            admin.auth().getUser(uid)
+                .then(userRecord => {
+                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                        if (snapshot.exists()){
+                            const event = snapshot.val();
+                            if (event.byID == userRecord.uid) {
+                                let updates = {}
+                                const location = `/events/${req.params.id}/`
+                                updates[location+"name"] = req.body.name
+                                updates[location+"desc"] = req.body.desc
+                                updates[location+"venue"] = req.body.venue
+                                updates[location+"date"] = req.body.date
+                                updates[location+"time"] = req.body.time
+                                if (req.body.attachments) {
+                                    updates[location+"attachments"] = req.body.attachments
+                                }
+                                db.ref().update(updates)
+                                console.log(event.name)
+                                sendNotification(event.name + " has been edited", "Edited by " + event.byName , userRecord.photoURL, "Event");
+                                res.sendStatus(200);
+                            } else {
+                                console.log("Not Authorized")
+                                res.json({
+                                    error: "Not Authorized"
+                                })
+                            }
+                        } else {
+                            console.log("Event does not exist")
+                            res.json({
+                                error: "Event does not exists"
+                            })
+                        }
                     })
                 })
                 .catch(error => {
