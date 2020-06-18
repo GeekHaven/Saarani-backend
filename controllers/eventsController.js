@@ -68,8 +68,6 @@ router.post('/', (req, res) => {
                     obj.venue = venue;
                     obj.date = date;
                     obj.time = time;
-                    obj.interestedUsers = interestedUsers;
-                    obj.markedGoingUsers = markedGoingUsers;
                     if (attachments) obj.attachments = attachments;
                     eventRef.push(obj);
                     sendNotification("New Event by " + byName, name + ", " + date + " " + time, userRecord.photoURL, "Event");
@@ -146,7 +144,7 @@ router.post('/:id/mark', (req, res) => {
             admin.auth().getUser(uid)
                 .then((userRecord) => {
                     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                        if (snapshot.exists()){
+                        if (snapshot.exists()) {
                             const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
                                 if (snapshot.exists()) {
                                     console.log(Object.keys(snapshot.val()))
@@ -158,15 +156,19 @@ router.post('/:id/mark', (req, res) => {
                                     db.ref().update(updatesUser)
                                     updatesEvent[`/events/${dbEventID}/markedBy/${dbUserID}`] = req.body.mark;
                                     db.ref().update(updatesEvent)
-                                    res.json({msg : "Operation Successful" })
+                                    res.sendStatus(200);
                                 } else {
-                                    console.log("User does not exists")
-                                    res.json({msg : "User does not exists" })
+                                    console.log("User does not exist")
+                                    res.json({
+                                        error: "User does not exist"
+                                    })
                                 }
                             })
                         } else {
-                            console.log("Event does not exists")
-                            res.json({msg : "Event does not exists" })
+                            console.log("Event does not exist")
+                            res.json({
+                                error: "Event does not exists"
+                            })
                         }
                     })
                 })
