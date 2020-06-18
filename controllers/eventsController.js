@@ -187,4 +187,51 @@ router.post('/:id/mark', (req, res) => {
         });
 })
 
+router.post('/marked', (req, res) => {
+    let idToken = req.body.token;
+    admin.auth().verifyIdToken(idToken)
+        .then((decodedToken) => {
+            let uid = decodedToken.uid;
+            admin.auth().getUser(uid)
+                .then((userRecord) => {
+                    const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+                        if (snapshot.exists()) {
+                            let dbUserID = Object.keys(snapshot.val())[0];
+                            let interestedEvents = snapshot.val()[dbUserID].marked;
+                            let eventRef = ref.child("events").once("value", (snapshot) => {
+                                let message = {};
+                                Object.keys(interestedEvents).forEach(eventKey => {
+                                    message[eventKey] = snapshot.val()[eventKey];
+                                    message[eventKey].markedAs = interestedEvents[eventKey];
+                                })
+                                res.json(message);
+                            }, (error) => {
+                                console.log(`The read failed: ${error.code}`);
+                                res.json({
+                                    error: error.code
+                                });
+                            });
+                        } else {
+                            console.log("User does not exist")
+                            res.json({
+                                error: "User does not exist"
+                            })
+                        }
+                    })
+                })
+                .catch(error => {
+                    console.log(error);
+                    res.json({
+                        error: error.code
+                    });
+                });
+        })
+        .catch(error => {
+            console.log(error);
+            res.json({
+                error: error.code
+            });
+        });
+})
+
 module.exports = router;
