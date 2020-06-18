@@ -138,4 +138,51 @@ router.delete('/:id', (req, res) => {
         });
 })
 
+router.post('/:id/mark', (req, res) => {
+    let idToken = req.body.token;
+    admin.auth().verifyIdToken(idToken)
+        .then((decodedToken) => {
+            let uid = decodedToken.uid;
+            admin.auth().getUser(uid)
+                .then((userRecord) => {
+                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                        if (snapshot.exists()){
+                            const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+                                if (snapshot.exists()) {
+                                    console.log(Object.keys(snapshot.val()))
+                                    let updatesUser = {};
+                                    let updatesEvent = {};
+                                    dbEventID = req.params.id;
+                                    dbUserID = Object.keys(snapshot.val())[0]
+                                    updatesUser[`/users/${dbUserID}/marked/${dbEventID}`] = req.body.mark;
+                                    db.ref().update(updatesUser)
+                                    updatesEvent[`/events/${dbEventID}/markedBy/${dbUserID}`] = req.body.mark;
+                                    db.ref().update(updatesEvent)
+                                    res.json({msg : "Operation Successful" })
+                                } else {
+                                    console.log("User does not exists")
+                                    res.json({msg : "User does not exists" })
+                                }
+                            })
+                        } else {
+                            console.log("Event does not exists")
+                            res.json({msg : "Event does not exists" })
+                        }
+                    })
+                })
+                .catch(error => {
+                    console.log(error);
+                    res.json({
+                        error: error.code
+                    });
+                });
+        })
+        .catch(error => {
+            console.log(error);
+            res.json({
+                error: error.code
+            });
+        });
+})
+
 module.exports = router;
