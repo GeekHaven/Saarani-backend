@@ -4,7 +4,8 @@ function sendNotification(title, body, image, topic) {
     let message = {
         data: {
             title: title,
-            body: body
+            body: body,
+            image: image
         },
         android: {
             notification: {

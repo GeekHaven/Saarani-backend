@@ -68,7 +68,7 @@ router.post('/', (req, res) => {
                     obj.time = time;
                     if (attachments) obj.attachments = attachments;
                     eventRef.push(obj);
-                    sendNotification("New Event by " + byName, name + ", " + date + " " + time, userRecord.photoURL, "Event");
+                    sendNotification("New Event: " + name, "Hosted by " + byName + ", " + date + " " + time, userRecord.photoURL, "Event");
                     res.json(obj);
                 })
                 .catch(error => {
@@ -98,7 +98,7 @@ router.delete('/:id', (req, res) => {
                             const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
                                 db.ref(`events/${req.params.id}`).remove();
-                                sendNotification(event.name + " has been cancelled", "Updated by " + event.byName, userRecord.photoURL, "Event");
+                                sendNotification("Event Cancelled: " + event.name, "Update by " + event.byName, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized");
@@ -157,7 +157,7 @@ router.put('/:id', (req, res) => {
                                 }
                                 db.ref().update(updates)
                                 console.log(event.name)
-                                sendNotification(event.name + " has been edited", "Edited by " + event.byName , userRecord.photoURL, "Event");
+                                sendNotification("Event Updated: " + event.name, "Update by " + event.byName + ", " + event.date + " " + event.time, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized")
@@ -168,7 +168,7 @@ router.put('/:id', (req, res) => {
                         } else {
                             console.log("Event does not exist")
                             res.json({
-                                error: "Event does not exists"
+                                error: "Event does not exist"
                             })
                         }
                     })
