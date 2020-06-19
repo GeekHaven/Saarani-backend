@@ -7,11 +7,15 @@ var transporter = nodemailer.createTransport({
 });
 
 function sendEmail(recipients, data, operation) {
+    let text = data.byName + " is hosting an event " + data.name + "\n\n" + data.desc + "\n\nDate: " + data.date + "\nTime: " + data.time + "\nVenue: " + data.venue + "\n\nSee you there! Refer to the app for possible attachmments or to mark yourself interested.";
+    if(operation === "[Cancelled] ") {
+      text = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " has been CANCELLED.\n\nWe apologize for any inconvenience.";
+    }
     var mailOptions = {
         from: 'testsaarani@gmail.com',
         to: recipients,
         subject: operation + data.name + " by " + data.byName,
-        text: JSON.stringify(data)
+        text: text
       };
 
       transporter.sendMail(mailOptions, function(error, info){
