@@ -9,7 +9,7 @@ var transporter = nodemailer.createTransport({
 function sendEmail(recipients, data, operation) {
     let text = data.byName + " is hosting an event " + data.name + "\n\n" + data.desc + "\n\nDate: " + data.date + "\nTime: " + data.time + "\nVenue: " + data.venue + "\n\nSee you there! Refer to the app for possible attachmments or to mark yourself interested.";
     let html = data.byName + " is hosting an event <b>" + data.name + "</b><br/><br/>" + data.desc + "<br/><br/><b>Date:</b> " + data.date + "<br/><b>Time:</b> " + data.time + "<br/><b>Venue:</b> " + data.venue + "<br/><br/>See you there! Refer to the app for possible attachmments or to mark yourself interested.";
-    if(operation === "[Cancelled] ") {
+    if(operation === "Event Cancelled: ") {
       text = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " has been CANCELLED.\n\nWe apologize for any inconvenience.";
       html = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " <b>has been CANCELLED</b>.<br/><br/>We apologize for any inconvenience.";
     }

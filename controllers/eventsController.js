@@ -71,7 +71,7 @@ router.post('/', (req, res) => {
                     if (attachments) obj.attachments = attachments;
                     if (emailRecipients) {
                         obj.emailRecipients = emailRecipients;
-                        sendEmail(emailRecipients,obj,"[NEW] ")
+                        sendEmail(emailRecipients, obj, "New Event: ")
                     }
                     eventRef.push(obj);
                     sendNotification("New Event: " + name, "Hosted by " + byName + ", " + date + " " + time, userRecord.photoURL, "Event");
@@ -105,7 +105,7 @@ router.delete('/:id', (req, res) => {
                             if (event.byID == userRecord.uid) {
                                 db.ref(`events/${req.params.id}`).remove();
                                 if (event.emailRecipients){
-                                    sendEmail(event.emailRecipients,event,"[Cancelled] ")
+                                    sendEmail(event.emailRecipients, event, "Event Cancelled: ")
                                 }
                                 sendNotification("Event Cancelled: " + event.name, "Update by " + event.byName, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
@@ -175,7 +175,7 @@ router.put('/:id', (req, res) => {
                                 db.ref().update(updates)
                                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                                         if (snapshot.exists()){
-                                            sendEmail(sendEmailTo, snapshot.val(), "[Updated] ")
+                                            sendEmail(sendEmailTo, snapshot.val(), "Event Updated: ")
                                     }
                                 })
                                 sendNotification("Event Updated: " + event.name, "Update by " + event.byName + ", " + event.date + " " + event.time, userRecord.photoURL, "Event");
