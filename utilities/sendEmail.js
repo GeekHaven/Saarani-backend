@@ -13,6 +13,10 @@ function sendEmail(recipients, data, operation) {
       text = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " has been CANCELLED.\n\nWe apologize for any inconvenience.";
       html = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " <b>has been CANCELLED</b>.<br/><br/>We apologize for any inconvenience.";
     }
+    if(operation === "Event Attendees Updated: ") {
+      text = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " is no longer meant for you\n\nWe apologize for any inconvenience.";
+      html = data.name + " being hosted by " + data.byName + " on " + data.date + " " + data.time + " <b>is no longer meant for you</b>.<br/><br/>We apologize for any inconvenience.";
+    }
     var mailOptions = {
         from: 'testsaarani@gmail.com',
         to: recipients,

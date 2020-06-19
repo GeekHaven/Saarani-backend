@@ -171,19 +171,42 @@ router.put('/:id', (req, res) => {
                                 if (req.body.attachments) {
                                     updates[location+"attachments"] = req.body.attachments
                                 }
-                                let sendEmailTo = [];
-                                if (event.emailRecipients){
-                                    sendEmailTo = event.emailRecipients
+                                let eventCancelledFor = [];
+                                let oldRecipients = event.emailRecipients
+                                let newRecipients = req.body.emailRecipients
+                                console.log(newRecipients)
+                                if (oldRecipients){
+                                    if (newRecipients) {
+                                        oldRecipients.forEach(oldRecipient => {
+                                            let inNew = false;
+                                            newRecipients.forEach(newRecipient => {
+                                                if (oldRecipient === newRecipient) {
+                                                    inNew = true;
+                                                }
+                                            })
+                                            if (inNew) {}
+                                            else {
+                                                eventCancelledFor.push(oldRecipient)
+                                            }
+                                        });
+                                    } else {
+                                        eventCancelledFor = oldRecipients;
+                                    }
                                 }
-                                if (req.body.emailRecipients) {
-                                    updates[location+"emailRecipients"] = req.body.emailRecipients;
-                                    sendEmailTo = sendEmailTo.concat(req.body.emailRecipients)
+                                if (newRecipients) {
+                                    updates[location+"emailRecipients"] = newRecipients;
+                                } else {
+                                    if (oldRecipients){
+                                        db.ref(location+"emailRecipients").remove()
+                                    }
                                 }
                                 db.ref().update(updates)
                                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                                        if (snapshot.exists() && snapshot.val().emailRecipients){
-                                            sendEmail(sendEmailTo, snapshot.val(), "Event Updated: ")
-                                    }
+                                        if (snapshot.exists()){
+                                            console.log(eventCancelledFor)
+                                            if (newRecipients) sendEmail(newRecipients, snapshot.val(), "Event Updated: ")
+                                            if (eventCancelledFor) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
+                                        }
                                 })
                                 sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
                                 res.sendStatus(200);
