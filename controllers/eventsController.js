@@ -74,7 +74,7 @@ router.post('/', (req, res) => {
                         sendEmail(emailRecipients,obj,"[NEW] ")
                     }
                     eventRef.push(obj);
-                    sendNotification("New Event by " + byName, name + ", " + date + " " + time, userRecord.photoURL, "Event");
+                    sendNotification("New Event: " + name, "Hosted by " + byName + ", " + date + " " + time, userRecord.photoURL, "Event");
                     res.json(obj);
                 })
                 .catch(error => {
@@ -107,7 +107,7 @@ router.delete('/:id', (req, res) => {
                                 if (event.emailRecipients){
                                     sendEmail(event.emailRecipients,event,"[Cancelled] ")
                                 }
-                                sendNotification(event.name + " has been cancelled", "Updated by " + event.byName, userRecord.photoURL, "Event");
+                                sendNotification("Event Cancelled: " + event.name, "Update by " + event.byName, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized");
@@ -175,10 +175,10 @@ router.put('/:id', (req, res) => {
                                 db.ref().update(updates)
                                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                                         if (snapshot.exists()){
-                                            sendEmail(sendEmailTo, snapshot.val(), "[Edited] ")
+                                            sendEmail(sendEmailTo, snapshot.val(), "[Updated] ")
                                     }
                                 })
-                                sendNotification(event.name + " has been edited", "Edited by " + event.byName , userRecord.photoURL, "Event");
+                                sendNotification("Event Updated: " + event.name, "Update by " + event.byName + ", " + event.date + " " + event.time, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized")
@@ -189,7 +189,7 @@ router.put('/:id', (req, res) => {
                         } else {
                             console.log("Event does not exist")
                             res.json({
-                                error: "Event does not exists"
+                                error: "Event does not exist"
                             })
                         }
                     })
