@@ -171,28 +171,9 @@ router.put('/:id', (req, res) => {
                                 if (req.body.attachments) {
                                     updates[location+"attachments"] = req.body.attachments
                                 }
-                                let eventCancelledFor = [];
                                 let oldRecipients = event.emailRecipients
                                 let newRecipients = req.body.emailRecipients
-                                console.log(newRecipients)
-                                if (oldRecipients){
-                                    if (newRecipients) {
-                                        oldRecipients.forEach(oldRecipient => {
-                                            let inNew = false;
-                                            newRecipients.forEach(newRecipient => {
-                                                if (oldRecipient === newRecipient) {
-                                                    inNew = true;
-                                                }
-                                            })
-                                            if (inNew) {}
-                                            else {
-                                                eventCancelledFor.push(oldRecipient)
-                                            }
-                                        });
-                                    } else {
-                                        eventCancelledFor = oldRecipients;
-                                    }
-                                }
+                                let eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
                                 if (newRecipients) {
                                     updates[location+"emailRecipients"] = newRecipients;
                                 } else {
