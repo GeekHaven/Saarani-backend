@@ -209,6 +209,56 @@ router.put('/:id', (req, res) => {
         });
 })
 
+router.post('/:id/remind', (req,res) => {
+    let idToken = req.body.token;
+    admin.auth().verifyIdToken(idToken)
+        .then((decodedToken) => {
+            let uid = decodedToken.uid;
+            admin.auth().getUser(uid)
+                .then((userRecord) => {
+                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                        if (snapshot.exists()) {
+                            const event = snapshot.val();
+                            if (event.byID == userRecord.uid) {
+                                if (event.emailRecipients){
+                                    sendEmail(event.emailRecipients, event, "Event Reminder: ")
+                                }
+                                sendNotification("Event Reminder: " + event.name, "Reminder by " + event.byName, userRecord.photoURL, "Event");
+                                res.sendStatus(200);
+                            } else {
+                                console.log("Not Authorized");
+                                res.json({
+                                    error: "Not Authorized"
+                                });
+                            }
+                        } else {
+                            console.log("Event does not exist");
+                            res.json({
+                                error: "Event does not exist"
+                            });
+                        }
+                    }, (error) => {
+                        console.log(`The read failed: ${error.code}`);
+                        res.json({
+                            error: error.code
+                        });
+                    })
+                })
+                .catch(error => {
+                    console.log(error);
+                    res.json({
+                        error: error.code
+                    });
+                });
+        })
+        .catch(error => {
+            console.log(error);
+            res.json({
+                error: error.code
+            });
+        });
+})
+
 router.post('/:id/mark', (req, res) => {
     let idToken = req.body.token;
     admin.auth().verifyIdToken(idToken)
