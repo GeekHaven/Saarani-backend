@@ -1,5 +1,6 @@
 let admin = require("../initFirebase.js");
 let sendNotification = require("../utilities/sendNotification.js")
+let sendEmail = require("../utilities/sendEmail.js")
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
@@ -57,6 +58,7 @@ router.post('/', (req, res) => {
                     let date = req.body.date;
                     let time = req.body.time;
                     let attachments = req.body.attachments;
+                    let emailRecipients = req.body.emailRecipients;
                     let eventRef = ref.child("events");
                     let obj = {};
                     obj.name = name;
@@ -67,6 +69,10 @@ router.post('/', (req, res) => {
                     obj.date = date;
                     obj.time = time;
                     if (attachments) obj.attachments = attachments;
+                    if (emailRecipients) {
+                        obj.emailRecipients = emailRecipients;
+                        sendEmail(emailRecipients,obj,"[NEW] ")
+                    }
                     eventRef.push(obj);
                     sendNotification("New Event: " + name, "Hosted by " + byName + ", " + date + " " + time, userRecord.photoURL, "Event");
                     res.json(obj);
@@ -98,6 +104,9 @@ router.delete('/:id', (req, res) => {
                             const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
                                 db.ref(`events/${req.params.id}`).remove();
+                                if (event.emailRecipients){
+                                    sendEmail(event.emailRecipients,event,"[Cancelled] ")
+                                }
                                 sendNotification("Event Cancelled: " + event.name, "Update by " + event.byName, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
@@ -155,8 +164,20 @@ router.put('/:id', (req, res) => {
                                 if (req.body.attachments) {
                                     updates[location+"attachments"] = req.body.attachments
                                 }
+                                let sendEmailTo = [];
+                                if (event.emailRecipients){
+                                    sendEmailTo = event.emailRecipients
+                                }
+                                if (req.body.emailRecipients) {
+                                    updates[location+"emailRecipients"] = req.body.emailRecipients;
+                                    sendEmailTo = sendEmailTo.concat(req.body.emailRecipients)
+                                }
                                 db.ref().update(updates)
-                                console.log(event.name)
+                                let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                                        if (snapshot.exists()){
+                                            sendEmail(sendEmailTo, snapshot.val(), "[Updated] ")
+                                    }
+                                })
                                 sendNotification("Event Updated: " + event.name, "Update by " + event.byName + ", " + event.date + " " + event.time, userRecord.photoURL, "Event");
                                 res.sendStatus(200);
                             } else {
