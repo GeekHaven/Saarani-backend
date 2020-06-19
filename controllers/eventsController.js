@@ -74,7 +74,7 @@ router.post('/', (req, res) => {
                         sendEmail(emailRecipients, obj, "New Event: ")
                     }
                     eventRef.push(obj);
-                    sendNotification("New Event: " + name, "Hosted by " + byName + ", " + date + " " + time, userRecord.photoURL, "Event");
+                    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
                     res.json(obj);
                 })
                 .catch(error => {
@@ -107,7 +107,7 @@ router.delete('/:id', (req, res) => {
                                 if (event.emailRecipients){
                                     sendEmail(event.emailRecipients, event, "Event Cancelled: ")
                                 }
-                                sendNotification("Event Cancelled: " + event.name, "Update by " + event.byName, userRecord.photoURL, "Event");
+                                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", true);
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized");
@@ -174,11 +174,11 @@ router.put('/:id', (req, res) => {
                                 }
                                 db.ref().update(updates)
                                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                                        if (snapshot.exists()){
+                                        if (snapshot.exists() && snapshot.val().emailRecipients){
                                             sendEmail(sendEmailTo, snapshot.val(), "Event Updated: ")
                                     }
                                 })
-                                sendNotification("Event Updated: " + event.name, "Update by " + event.byName + ", " + event.date + " " + event.time, userRecord.photoURL, "Event");
+                                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized")
@@ -223,7 +223,7 @@ router.post('/:id/remind', (req,res) => {
                                 if (event.emailRecipients){
                                     sendEmail(event.emailRecipients, event, "Event Reminder: ")
                                 }
-                                sendNotification("Event Reminder: " + event.name, "Reminder by " + event.byName, userRecord.photoURL, "Event");
+                                sendNotification("Event Reminder: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
                                 res.sendStatus(200);
                             } else {
                                 console.log("Not Authorized");
