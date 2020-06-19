@@ -42,6 +42,25 @@ router.get('/:uid', (req, res) => {
     })
 })
 
+router.get('/:uid/events', (req, res) => {
+    const eventsRef = db.ref('events/').orderByChild("byID").equalTo(req.params.uid).once("value", snapshot => {
+        if (snapshot.exists()) {
+            let events = snapshot.val();
+            res.json(events)
+        } else {
+            console.log("Society does not exist or has no events.");
+            res.json({
+                error: "Society does not exist or has no events."
+            });
+        }
+    }, (error) => {
+        console.log(`The read failed: ${error.code}`);
+        res.json({
+            error: error.code
+        });
+    })
+})
+
 router.post('/check', (req, res) => {
     let idToken = req.body.token;
     admin.auth().verifyIdToken(idToken)
