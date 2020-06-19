@@ -104,10 +104,12 @@ router.delete('/:id', (req, res) => {
                             const event = snapshot.val();
                             if (event.byID == userRecord.uid) {
                                 let markedBy = event.markedBy;
-                                let dbUserIDs = Object.keys(markedBy);
-                                dbUserIDs.forEach(dbUserID => {
-                                    db.ref(`users/${dbUserID}/marked/${req.params.id}`).remove();
-                                })
+                                if(markedBy) {
+                                    let dbUserIDs = Object.keys(markedBy);
+                                    dbUserIDs.forEach(dbUserID => {
+                                        db.ref(`users/${dbUserID}/marked/${req.params.id}`).remove();
+                                    })
+                                }
                                 db.ref(`events/${req.params.id}`).remove();
                                 if (event.emailRecipients){
                                     sendEmail(event.emailRecipients, event, "Event Cancelled: ")
