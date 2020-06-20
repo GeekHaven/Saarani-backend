@@ -22,15 +22,14 @@ router.get('/', (req, res) => {
             let eventsWithkey = {};
             let events = snapshot.val();
             let eventsIDs = Object.keys(events);
-            let pumpkin = new Object;
             eventsIDs.forEach(eventID => {
                     if (events[eventID].keys){
                         if (events[eventID].keys[key]){
-                            eventsWithkey[eventID] = events[eventID] 
+                            eventsWithkey[eventID] = events[eventID];
                         }
                     }
             })
-            res.json(eventsWithkey)
+            res.json(eventsWithkey);
         }, (error) => {
             console.log(`The read failed: ${error.code}`);
             res.json({
