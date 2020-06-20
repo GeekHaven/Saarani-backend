@@ -247,7 +247,7 @@ router.post('/:id/remind', authMiddleware, (req, res) => {
     })
 })
 
-router.post('/:id/mark', (req, res) => {
+router.post('/:id/mark', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
         if (snapshot.exists()) {
