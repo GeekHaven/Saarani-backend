@@ -91,7 +91,7 @@ router.post('/', authMiddleware, (req, res) => {
     let objKeys = {}
     let keysName = name.toLowerCase().split(" ");
     let keysDesc = desc.toLowerCase().split(" ");
-    keys = keys.concat(keysName) ; keys = keys.concat(keysDesc)
+    keys = keys.concat(keysName); keys = keys.concat(keysDesc);
     keys.forEach(key => {
         objKeys[key] = true;
     })
@@ -162,8 +162,15 @@ router.put('/:id', authMiddleware, (req, res) => {
                     updates[location + "attachments"] = req.body.attachments
                 }
                 let oldRecipients = event.emailRecipients
-                let newRecipients = req.body.emailRecipients
-                let eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
+                let newRecipients = req.body.emailRecipients;
+                let eventCancelledFor = {};
+                if(oldRecipients) {
+                    if(newRecipients) {
+                        eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
+                    } else {
+                        eventCancelledFor = oldRecipients;
+                    }
+                }
                 if (newRecipients) {
                     updates[location + "emailRecipients"] = newRecipients;
                 } else {
@@ -171,12 +178,21 @@ router.put('/:id', authMiddleware, (req, res) => {
                         db.ref(location + "emailRecipients").remove()
                     }
                 }
+                let keys = new Array;
+                let objKeys = {}
+                let keysName = req.body.name.toLowerCase().split(" ");
+                let keysDesc = req.body.desc.toLowerCase().split(" ");
+                keys = keys.concat(keysName); keys = keys.concat(keysDesc);
+                keys.forEach(key => {
+                    objKeys[key] = true;
+                })
+                updates[location + "keys"] = objKeys;
                 db.ref().update(updates)
                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                     if (snapshot.exists()) {
                         console.log(eventCancelledFor)
                         if (newRecipients) sendEmail(newRecipients, snapshot.val(), "Event Updated: ")
-                        if (eventCancelledFor) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
+                        if (eventCancelledFor.length) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
                     }
                 })
                 sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
