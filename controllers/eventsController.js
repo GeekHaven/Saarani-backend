@@ -15,14 +15,38 @@ const db = admin.database();
 const ref = db.ref("/");
 
 router.get('/', (req, res) => {
-    let eventRef = ref.child("events").once("value", (snapshot) => {
-        res.json(snapshot.val());
-    }, (error) => {
-        console.log(`The read failed: ${error.code}`);
-        res.json({
-            error: error.code
+    let key = req.query.key;
+    if (key) {
+        key = String(key).toLowerCase();
+        var eventRef = db.ref(`events/`).once("value", (snapshot) => {
+            let eventsWithkey = {};
+            let events = snapshot.val();
+            let eventsIDs = Object.keys(events);
+            let pumpkin = new Object;
+            eventsIDs.forEach(eventID => {
+                    if (events[eventID].keys){
+                        if (events[eventID].keys[key]){
+                            eventsWithkey[eventID] = events[eventID] 
+                        }
+                    }
+            })
+            res.json(eventsWithkey)
+        }, (error) => {
+            console.log(`The read failed: ${error.code}`);
+            res.json({
+                error: error.code
+            });
+        }) 
+    } else {
+        var eventRef = ref.child("events").once("value", (snapshot) => {
+            res.json(snapshot.val());
+        }, (error) => {
+            console.log(`The read failed: ${error.code}`);
+            res.json({
+                error: error.code
+            });
         });
-    });
+    }
 })
 
 router.get('/:id', (req, res) => {
@@ -64,6 +88,15 @@ router.post('/', authMiddleware, (req, res) => {
     obj.venue = venue;
     obj.date = date;
     obj.time = time;
+    let keys = new Array;
+    let objKeys = {}
+    let keysName = name.toLowerCase().split(" ");
+    let keysDesc = desc.toLowerCase().split(" ");
+    keys = keys.concat(keysName) ; keys = keys.concat(keysDesc)
+    keys.forEach(key => {
+        objKeys[key] = true;
+    })
+    obj.keys = objKeys;
     if (attachments) obj.attachments = attachments;
     if (emailRecipients) {
         obj.emailRecipients = emailRecipients;
