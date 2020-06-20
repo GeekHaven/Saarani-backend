@@ -1,6 +1,7 @@
 let admin = require("../initFirebase.js");
 let sendNotification = require("../utilities/sendNotification.js")
 let sendEmail = require("../utilities/sendEmail.js")
+let authMiddleware = require("../middlewares/authMiddleware")
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
@@ -43,329 +44,215 @@ router.get('/:id', (req, res) => {
     })
 })
 
-router.post('/', (req, res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then(decodedToken => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then(userRecord => {
-                    let name = req.body.name;
-                    let byID = userRecord.uid;
-                    let byName = userRecord.displayName;
-                    let desc = req.body.desc;
-                    let venue = req.body.venue;
-                    let date = req.body.date;
-                    let time = req.body.time;
-                    let attachments = req.body.attachments;
-                    let emailRecipients = req.body.emailRecipients;
-                    let eventRef = ref.child("events");
-                    let obj = {};
-                    obj.name = name;
-                    obj.byID = byID;
-                    obj.byName = byName;
-                    obj.desc = desc;
-                    obj.venue = venue;
-                    obj.date = date;
-                    obj.time = time;
-                    if (attachments) obj.attachments = attachments;
-                    if (emailRecipients) {
-                        obj.emailRecipients = emailRecipients;
-                        sendEmail(emailRecipients, obj, "New Event: ")
+router.post('/', authMiddleware, (req, res) => {
+    let userRecord = res.locals.userRecord;
+    let name = req.body.name;
+    let byID = userRecord.uid;
+    let byName = userRecord.displayName;
+    let desc = req.body.desc;
+    let venue = req.body.venue;
+    let date = req.body.date;
+    let time = req.body.time;
+    let attachments = req.body.attachments;
+    let emailRecipients = req.body.emailRecipients;
+    let eventRef = ref.child("events");
+    let obj = {};
+    obj.name = name;
+    obj.byID = byID;
+    obj.byName = byName;
+    obj.desc = desc;
+    obj.venue = venue;
+    obj.date = date;
+    obj.time = time;
+    if (attachments) obj.attachments = attachments;
+    if (emailRecipients) {
+        obj.emailRecipients = emailRecipients;
+        sendEmail(emailRecipients, obj, "New Event: ")
+    }
+    eventRef.push(obj);
+    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
+    res.json(obj);
+})
+
+router.delete('/:id', authMiddleware, (req, res) => {
+    let userRecord = res.locals.userRecord;
+    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            const event = snapshot.val();
+            if (event.byID == userRecord.uid) {
+                let markedBy = event.markedBy;
+                if (markedBy) {
+                    let dbUserIDs = Object.keys(markedBy);
+                    dbUserIDs.forEach(dbUserID => {
+                        db.ref(`users/${dbUserID}/marked/${req.params.id}`).remove();
+                    })
+                }
+                db.ref(`events/${req.params.id}`).remove();
+                if (event.emailRecipients) {
+                    sendEmail(event.emailRecipients, event, "Event Cancelled: ")
+                }
+                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", true);
+                res.sendStatus(200);
+            } else {
+                console.log("Not Authorized");
+                res.json({
+                    error: "Not Authorized"
+                });
+            }
+        } else {
+            console.log("Event does not exist");
+            res.json({
+                error: "Event does not exist"
+            });
+        }
+    }, (error) => {
+        console.log(`The read failed: ${error.code}`);
+        res.json({
+            error: error.code
+        });
+    })
+})
+
+router.put('/:id', authMiddleware, (req, res) => {
+    let userRecord = res.locals.userRecord;
+    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            const event = snapshot.val();
+            if (event.byID == userRecord.uid) {
+                let updates = {}
+                const location = `/events/${req.params.id}/`
+                updates[location + "name"] = req.body.name
+                updates[location + "desc"] = req.body.desc
+                updates[location + "venue"] = req.body.venue
+                updates[location + "date"] = req.body.date
+                updates[location + "time"] = req.body.time
+                if (req.body.attachments) {
+                    updates[location + "attachments"] = req.body.attachments
+                }
+                let oldRecipients = event.emailRecipients
+                let newRecipients = req.body.emailRecipients
+                let eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
+                if (newRecipients) {
+                    updates[location + "emailRecipients"] = newRecipients;
+                } else {
+                    if (oldRecipients) {
+                        db.ref(location + "emailRecipients").remove()
                     }
-                    eventRef.push(obj);
-                    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
-                    res.json(obj);
+                }
+                db.ref().update(updates)
+                let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        console.log(eventCancelledFor)
+                        if (newRecipients) sendEmail(newRecipients, snapshot.val(), "Event Updated: ")
+                        if (eventCancelledFor) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
+                    }
                 })
-                .catch(error => {
-                    console.log("Error fetching user data:", error);
-                    res.json({
-                        error: error.code
-                    });
-                });
-        }).catch(error => {
-            console.log(error);
+                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
+                res.sendStatus(200);
+            } else {
+                console.log("Not Authorized")
+                res.json({
+                    error: "Not Authorized"
+                })
+            }
+        } else {
+            console.log("Event does not exist")
             res.json({
-                error: error.code
-            });
-        });
-
+                error: "Event does not exist"
+            })
+        }
+    })
 })
 
-router.delete('/:id', (req, res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then((decodedToken) => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then((userRecord) => {
-                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                        if (snapshot.exists()) {
-                            const event = snapshot.val();
-                            if (event.byID == userRecord.uid) {
-                                let markedBy = event.markedBy;
-                                if(markedBy) {
-                                    let dbUserIDs = Object.keys(markedBy);
-                                    dbUserIDs.forEach(dbUserID => {
-                                        db.ref(`users/${dbUserID}/marked/${req.params.id}`).remove();
-                                    })
-                                }
-                                db.ref(`events/${req.params.id}`).remove();
-                                if (event.emailRecipients){
-                                    sendEmail(event.emailRecipients, event, "Event Cancelled: ")
-                                }
-                                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", true);
-                                res.sendStatus(200);
-                            } else {
-                                console.log("Not Authorized");
-                                res.json({
-                                    error: "Not Authorized"
-                                });
-                            }
-                        } else {
-                            console.log("Event does not exist");
-                            res.json({
-                                error: "Event does not exist"
-                            });
-                        }
-                    }, (error) => {
-                        console.log(`The read failed: ${error.code}`);
-                        res.json({
-                            error: error.code
-                        });
-                    })
-                })
-                .catch(error => {
-                    console.log(error);
-                    res.json({
-                        error: error.code
-                    });
+router.post('/:id/remind', authMiddleware, (req, res) => {
+    let userRecord = res.locals.userRecord;
+    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            const event = snapshot.val();
+            if (event.byID == userRecord.uid) {
+                if (event.emailRecipients) {
+                    sendEmail(event.emailRecipients, event, "Event Reminder: ")
+                }
+                sendNotification("Event Reminder: " + event.name, event.venue + " \n" + event.date + " \n" + event.time, userRecord.photoURL, event.byName, "Event");
+                res.sendStatus(200);
+            } else {
+                console.log("Not Authorized");
+                res.json({
+                    error: "Not Authorized"
                 });
-        })
-        .catch(error => {
-            console.log(error);
+            }
+        } else {
+            console.log("Event does not exist");
             res.json({
-                error: error.code
+                error: "Event does not exist"
             });
+        }
+    }, (error) => {
+        console.log(`The read failed: ${error.code}`);
+        res.json({
+            error: error.code
         });
-})
-
-router.put('/:id', (req, res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then(decodedToken => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then(userRecord => {
-                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                        if (snapshot.exists()){
-                            const event = snapshot.val();
-                            if (event.byID == userRecord.uid) {
-                                let updates = {}
-                                const location = `/events/${req.params.id}/`
-                                updates[location+"name"] = req.body.name
-                                updates[location+"desc"] = req.body.desc
-                                updates[location+"venue"] = req.body.venue
-                                updates[location+"date"] = req.body.date
-                                updates[location+"time"] = req.body.time
-                                if (req.body.attachments) {
-                                    updates[location+"attachments"] = req.body.attachments
-                                }
-                                let oldRecipients = event.emailRecipients
-                                let newRecipients = req.body.emailRecipients
-                                let eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
-                                if (newRecipients) {
-                                    updates[location+"emailRecipients"] = newRecipients;
-                                } else {
-                                    if (oldRecipients){
-                                        db.ref(location+"emailRecipients").remove()
-                                    }
-                                }
-                                db.ref().update(updates)
-                                let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                                        if (snapshot.exists()){
-                                            console.log(eventCancelledFor)
-                                            if (newRecipients) sendEmail(newRecipients, snapshot.val(), "Event Updated: ")
-                                            if (eventCancelledFor) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
-                                        }
-                                })
-                                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
-                                res.sendStatus(200);
-                            } else {
-                                console.log("Not Authorized")
-                                res.json({
-                                    error: "Not Authorized"
-                                })
-                            }
-                        } else {
-                            console.log("Event does not exist")
-                            res.json({
-                                error: "Event does not exist"
-                            })
-                        }
-                    })
-                })
-                .catch(error => {
-                    console.log(error);
-                    res.json({
-                        error: error.code
-                    });
-                });
-        })
-        .catch(error => {
-            console.log(error);
-            res.json({
-                error: error.code
-            });
-        });
-})
-
-router.post('/:id/remind', (req,res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then((decodedToken) => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then((userRecord) => {
-                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                        if (snapshot.exists()) {
-                            const event = snapshot.val();
-                            if (event.byID == userRecord.uid) {
-                                if (event.emailRecipients){
-                                    sendEmail(event.emailRecipients, event, "Event Reminder: ")
-                                }
-                                sendNotification("Event Reminder: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
-                                res.sendStatus(200);
-                            } else {
-                                console.log("Not Authorized");
-                                res.json({
-                                    error: "Not Authorized"
-                                });
-                            }
-                        } else {
-                            console.log("Event does not exist");
-                            res.json({
-                                error: "Event does not exist"
-                            });
-                        }
-                    }, (error) => {
-                        console.log(`The read failed: ${error.code}`);
-                        res.json({
-                            error: error.code
-                        });
-                    })
-                })
-                .catch(error => {
-                    console.log(error);
-                    res.json({
-                        error: error.code
-                    });
-                });
-        })
-        .catch(error => {
-            console.log(error);
-            res.json({
-                error: error.code
-            });
-        });
+    })
 })
 
 router.post('/:id/mark', (req, res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then((decodedToken) => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then((userRecord) => {
-                    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
-                        if (snapshot.exists()) {
-                            const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
-                                if (snapshot.exists()) {
-                                    console.log(Object.keys(snapshot.val()))
-                                    let updatesUser = {};
-                                    let updatesEvent = {};
-                                    dbEventID = req.params.id;
-                                    dbUserID = Object.keys(snapshot.val())[0]
-                                    updatesUser[`/users/${dbUserID}/marked/${dbEventID}`] = req.body.mark;
-                                    db.ref().update(updatesUser)
-                                    updatesEvent[`/events/${dbEventID}/markedBy/${dbUserID}`] = req.body.mark;
-                                    db.ref().update(updatesEvent)
-                                    res.sendStatus(200);
-                                } else {
-                                    console.log("User does not exist")
-                                    res.json({
-                                        error: "User does not exist"
-                                    })
-                                }
-                            })
-                        } else {
-                            console.log("Event does not exist")
-                            res.json({
-                                error: "Event does not exists"
-                            })
-                        }
-                    })
-                })
-                .catch(error => {
-                    console.log(error);
+    let userRecord = res.locals.userRecord;
+    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+                if (snapshot.exists()) {
+                    console.log(Object.keys(snapshot.val()))
+                    let updatesUser = {};
+                    let updatesEvent = {};
+                    dbEventID = req.params.id;
+                    dbUserID = Object.keys(snapshot.val())[0]
+                    updatesUser[`/users/${dbUserID}/marked/${dbEventID}`] = req.body.mark;
+                    db.ref().update(updatesUser)
+                    updatesEvent[`/events/${dbEventID}/markedBy/${dbUserID}`] = req.body.mark;
+                    db.ref().update(updatesEvent)
+                    res.sendStatus(200);
+                } else {
+                    console.log("User does not exist")
                     res.json({
-                        error: error.code
-                    });
-                });
-        })
-        .catch(error => {
-            console.log(error);
+                        error: "User does not exist"
+                    })
+                }
+            })
+        } else {
+            console.log("Event does not exist")
             res.json({
-                error: error.code
-            });
-        });
+                error: "Event does not exists"
+            })
+        }
+    })
 })
 
 router.post('/marked', (req, res) => {
-    let idToken = req.body.token;
-    admin.auth().verifyIdToken(idToken)
-        .then((decodedToken) => {
-            let uid = decodedToken.uid;
-            admin.auth().getUser(uid)
-                .then((userRecord) => {
-                    const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
-                        if (snapshot.exists()) {
-                            let dbUserID = Object.keys(snapshot.val())[0];
-                            let interestedEvents = snapshot.val()[dbUserID].marked;
-                            let eventRef = ref.child("events").once("value", (snapshot) => {
-                                let message = {};
-                                Object.keys(interestedEvents).forEach(eventKey => {
-                                    message[eventKey] = snapshot.val()[eventKey];
-                                    message[eventKey].markedAs = interestedEvents[eventKey];
-                                })
-                                res.json(message);
-                            }, (error) => {
-                                console.log(`The read failed: ${error.code}`);
-                                res.json({
-                                    error: error.code
-                                });
-                            });
-                        } else {
-                            console.log("User does not exist")
-                            res.json({
-                                error: "User does not exist"
-                            })
-                        }
-                    })
+    let userRecord = res.locals.userRecord;
+    const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+        if (snapshot.exists()) {
+            let dbUserID = Object.keys(snapshot.val())[0];
+            let interestedEvents = snapshot.val()[dbUserID].marked;
+            let eventRef = ref.child("events").once("value", (snapshot) => {
+                let message = {};
+                Object.keys(interestedEvents).forEach(eventKey => {
+                    message[eventKey] = snapshot.val()[eventKey];
+                    message[eventKey].markedAs = interestedEvents[eventKey];
                 })
-                .catch(error => {
-                    console.log(error);
-                    res.json({
-                        error: error.code
-                    });
+                res.json(message);
+            }, (error) => {
+                console.log(`The read failed: ${error.code}`);
+                res.json({
+                    error: error.code
                 });
-        })
-        .catch(error => {
-            console.log(error);
-            res.json({
-                error: error.code
             });
-        });
+        } else {
+            console.log("User does not exist")
+            res.json({
+                error: "User does not exist"
+            })
+        }
+    })
 })
 
 module.exports = router;
