@@ -89,11 +89,13 @@ router.post('/', authMiddleware, (req, res) => {
     obj.time = time;
     let keys = new Array;
     let objKeys = {}
-    let keysName = name.toLowerCase().split(" ");
-    let keysDesc = desc.toLowerCase().split(" ");
+    let keysName = name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
+    let keysDesc = desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
     keys = keys.concat(keysName); keys = keys.concat(keysDesc);
     keys.forEach(key => {
-        objKeys[key] = true;
+        if (key!=''){
+            objKeys[key] = true;
+        }
     })
     obj.keys = objKeys;
     if (attachments) obj.attachments = attachments;
@@ -180,11 +182,13 @@ router.put('/:id', authMiddleware, (req, res) => {
                 }
                 let keys = new Array;
                 let objKeys = {}
-                let keysName = req.body.name.toLowerCase().split(" ");
-                let keysDesc = req.body.desc.toLowerCase().split(" ");
+                let keysName = req.body.name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
+                let keysDesc = req.body.desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
                 keys = keys.concat(keysName); keys = keys.concat(keysDesc);
                 keys.forEach(key => {
-                    objKeys[key] = true;
+                    if (key!=''){
+                        objKeys[key] = true;
+                    }
                 })
                 updates[location + "keys"] = objKeys;
                 db.ref().update(updates)
