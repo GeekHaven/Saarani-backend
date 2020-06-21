@@ -37,8 +37,12 @@ router.get('/', (req, res) => {
             });
         }) 
     } else {
-        var eventRef = ref.child("events").once("value", (snapshot) => {
-            res.json(snapshot.val());
+        var eventRef = db.ref("events").orderByChild("dateTime").once("value", (snapshot) => {
+            let obj = new Object;
+            snapshot.forEach(function(child) {
+                obj[child.key] = child.val();
+            });
+            res.json(obj);
         }, (error) => {
             console.log(`The read failed: ${error.code}`);
             res.json({
@@ -87,6 +91,7 @@ router.post('/', authMiddleware, (req, res) => {
     obj.venue = venue;
     obj.date = date;
     obj.time = time;
+    obj.dateTime = -1 * Number(date.split('/').reverse().join("") + time.replace(':',''));
     let keys = new Array;
     let objKeys = {}
     let keysName = name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
@@ -160,6 +165,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                 updates[location + "venue"] = req.body.venue
                 updates[location + "date"] = req.body.date
                 updates[location + "time"] = req.body.time
+                updates[location + "dateTime"] = -1 * Number(req.body.date.split('/').reverse().join("") + req.body.time.replace(':',''));
                 if (req.body.attachments) {
                     updates[location + "attachments"] = req.body.attachments
                 }
