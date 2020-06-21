@@ -91,7 +91,7 @@ router.post('/', authMiddleware, (req, res) => {
     let objKeys = {}
     let keysName = name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
     let keysDesc = desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-    keys = keys.concat(keysName); keys = keys.concat(keysDesc);
+    keys = keys.concat(keysName); keys = keys.concat(keysDesc); keys.push(userRecord.email.split("@")[0].split(".")[0]);
     keys.forEach(key => {
         if (key!=''){
             objKeys[key] = true;
@@ -184,7 +184,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                 let objKeys = {}
                 let keysName = req.body.name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
                 let keysDesc = req.body.desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-                keys = keys.concat(keysName); keys = keys.concat(keysDesc);
+                keys = keys.concat(keysName); keys = keys.concat(keysDesc);  keys.push(userRecord.email.split("@")[0].split(".")[0]);
                 keys.forEach(key => {
                     if (key!=''){
                         objKeys[key] = true;
