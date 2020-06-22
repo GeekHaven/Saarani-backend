@@ -44,15 +44,26 @@ router.get('/:uid', (req, res) => {
 })
 
 router.get('/:uid/events', (req, res) => {
-    const eventsRef = db.ref('events/').orderByChild("byID").equalTo(req.params.uid).once("value", snapshot => {
+    const eventsRef = db.ref('events').orderByChild("dateTime").once("value", snapshot => {
         if (snapshot.exists()) {
-            let events = snapshot.val();
-            res.json(events)
-        } else {
-            console.log("Society does not exist or has no events.");
-            res.json({
-                error: "Society does not exist or has no events."
+            let obj = new Object;
+            snapshot.forEach(function(child) {
+                let time = new Date().toString().split(/[ :]/g);
+                let isoTime = new Date().toISOString().split(/[-T]/g);
+                let inNumber = -1 * Number(isoTime[0]+isoTime[1]+isoTime[2]+time[4]+time[5]);
+                if (child.val().dateTime > inNumber) {
+                    return;
+                }
+                if (child.val().byID == req.params.uid){
+                    obj[child.key] = child.val();
+                }
             });
+            let revObj = new Object;
+            let objKeys = Object.keys(obj);
+            for (var i=objKeys.length-1; i>=0; i--){
+                revObj[objKeys[i]] = obj[objKeys[i]];
+            }
+            res.json(revObj);
         }
     }, (error) => {
         console.log(`The read failed: ${error.code}`);

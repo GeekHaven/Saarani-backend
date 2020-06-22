@@ -18,18 +18,27 @@ router.get('/', (req, res) => {
     let key = req.query.key;
     if (key) {
         key = String(key).toLowerCase();
-        var eventRef = db.ref(`events/`).once("value", (snapshot) => {
-            let eventsWithkey = {};
-            let events = snapshot.val();
-            let eventsIDs = Object.keys(events);
-            eventsIDs.forEach(eventID => {
-                    if (events[eventID].keys){
-                        if (events[eventID].keys[key]){
-                            eventsWithkey[eventID] = events[eventID];
-                        }
+        var eventRef = db.ref(`events`).orderByChild("dateTime").once("value", (snapshot) => {
+            let obj = new Object;
+            snapshot.forEach(function(child) {
+                let time = new Date().toString().split(/[ :]/g);
+                let isoTime = new Date().toISOString().split(/[-T]/g);
+                let inNumber = -1 * Number(isoTime[0]+isoTime[1]+isoTime[2]+time[4]+time[5]);
+                if (child.val().dateTime > inNumber) {
+                    return;
+                }
+                if (child.val().keys){
+                    if (child.val().keys[key]){
+                        obj[child.key] = child.val();
                     }
-            })
-            res.json(eventsWithkey);
+                }
+            });
+            let revObj = new Object;
+            let objKeys = Object.keys(obj);
+            for (var i=objKeys.length-1; i>=0; i--){
+                revObj[objKeys[i]] = obj[objKeys[i]];
+            }
+            res.json(revObj);
         }, (error) => {
             console.log(`The read failed: ${error.code}`);
             res.json({
