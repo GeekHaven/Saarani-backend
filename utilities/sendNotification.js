@@ -1,6 +1,6 @@
 let admin = require("../initFirebase.js");
 
-function sendNotification(title, body, image, subtext, topic, del = false) {
+function sendNotification(title, body, image, subtext, topic, eventID, del = false) {
     let message = {}
     message = {
         data: {
@@ -8,6 +8,7 @@ function sendNotification(title, body, image, subtext, topic, del = false) {
             body: body,
             image: image,
             subtext: subtext,
+            eventID: eventID,
             del: (del===true)? '1' : '0'
         },
         topic: topic

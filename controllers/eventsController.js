@@ -130,8 +130,11 @@ router.post('/', authMiddleware, (req, res) => {
         obj.emailRecipients = emailRecipients;
         sendEmail(emailRecipients, obj, "New Event: ")
     }
-    eventRef.push(obj);
-    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event");
+    let newEventRef = eventRef.push();
+    let newEventID = newEventRef.key;
+    console.log(newEventID);
+    newEventRef.set(obj);
+    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event", newEventID);
     res.json(obj);
 })
 
@@ -152,7 +155,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
                 if (event.emailRecipients) {
                     sendEmail(event.emailRecipients, event, "Event Cancelled: ")
                 }
-                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", true);
+                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", req.params.id, true);
                 res.sendStatus(200);
             } else {
                 console.log("Not Authorized");
@@ -227,7 +230,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                         if (eventCancelledFor.length) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
                     }
                 })
-                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event");
+                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event", req.params.id);
                 res.sendStatus(200);
             } else {
                 console.log("Not Authorized")
