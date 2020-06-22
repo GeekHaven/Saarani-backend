@@ -22,12 +22,12 @@
   "ams": {
     "coordinators": ["Nikhilesh Kumar", "Devavath Mahesh", "Aditya Kamble"],
     "email": "ams.society@iiita.ac.in",
-    "name": "AMS"
+    "name": "Acoustics and Media Society"
   },
   "dance": {
     "coordinators": ["Jahanvi Singh Bhadoria", "Akash Manhas", "Rahul Reddy Muppidi"],
     "email": "dance.society@iiita.ac.in",
-    "name": "Dance"
+    "name": "Dance Society"
   },
   "sarasva": {
     "coordinators": ["Abhigyan Sharma", "Ananya Aparajita Mohanty", "Giriraj Chandak"],
@@ -43,5 +43,20 @@
     "coordinators": ["Shashwat Sinha"],
     "email": "effervescence@iiita.ac.in",
     "name": "Effervescence"
+  },
+  "iiic": {
+    "coordinators": ["Aadya Sharma", "Sagar Lakhani"],
+    "email": "iiic@iiita.ac.in",
+    "name": "IIITA Info Communication Incubation Center"
+  },
+  "gymkhana": {
+    "coordinators": ["Harsh Bhardwaj"],
+    "email": "gymkhana@iiita.ac.in",
+    "name": "Gymkhana"
+  },
+  "sports": {
+    "coordinators": ["Shivam Kumar", "Ankush Pandey", "Lokesh Naik"],
+    "email": "sports.council@iiita.ac.in",
+    "name": "Sports Council"
   }
 }
