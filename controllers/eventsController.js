@@ -2,6 +2,7 @@ let admin = require("../initFirebase.js");
 let sendNotification = require("../utilities/sendNotification.js")
 let sendEmail = require("../utilities/sendEmail.js")
 let authMiddleware = require("../middlewares/authMiddleware")
+let helpers = require("../helpers/helpers")
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
@@ -20,10 +21,8 @@ router.get('/', (req, res) => {
         key = String(key).toLowerCase();
         var eventRef = db.ref(`events`).orderByChild("dateTime").once("value", (snapshot) => {
             let obj = new Object;
-            snapshot.forEach(function(child) {
-                let time = new Date().toString().split(/[ :]/g);
-                let isoTime = new Date().toISOString().split(/[-T]/g);
-                let inNumber = -1 * Number(isoTime[0]+isoTime[1]+isoTime[2]+time[4]+time[5]);
+            snapshot.forEach( child => {
+                let inNumber = helpers.numericCurrentTime();
                 if (child.val().dateTime > inNumber) {
                     return;
                 }
@@ -33,11 +32,7 @@ router.get('/', (req, res) => {
                     }
                 }
             });
-            let revObj = new Object;
-            let objKeys = Object.keys(obj);
-            for (var i=objKeys.length-1; i>=0; i--){
-                revObj[objKeys[i]] = obj[objKeys[i]];
-            }
+            let revObj = helpers.reverseJSON(obj);
             res.json(revObj);
         }, (error) => {
             console.log(`The read failed: ${error.code}`);
@@ -48,22 +43,14 @@ router.get('/', (req, res) => {
     } else {
         var eventRef = db.ref("events").orderByChild("dateTime").once("value", (snapshot) => {
             let obj = new Object;
-            snapshot.forEach(function(child) {
-                let time = new Date().toString().split(/[ :]/g);
-                let isoTime = new Date().toISOString().split(/[-T]/g);
-                let inNumber = -1 * Number(isoTime[0]+isoTime[1]+isoTime[2]+time[4]+time[5]);
+            snapshot.forEach( child => {
+                let inNumber = helpers.numericCurrentTime();
                 if (child.val().dateTime > inNumber) {
                     return;
                 }
-                else{
-                    obj[child.key] = child.val();
-                }
+                obj[child.key] = child.val();
             });
-            let revObj = new Object;
-            let objKeys = Object.keys(obj);
-            for (var i=objKeys.length-1; i>=0; i--){
-                revObj[objKeys[i]] = obj[objKeys[i]];
-            }
+            let revObj = helpers.reverseJSON(obj);
             res.json(revObj);
         }, (error) => {
             console.log(`The read failed: ${error.code}`);
@@ -113,18 +100,8 @@ router.post('/', authMiddleware, (req, res) => {
     obj.venue = venue;
     obj.date = date;
     obj.time = time;
-    obj.dateTime = -1 * Number(date.split('/').reverse().join("") + time.replace(':',''));
-    let keys = new Array;
-    let objKeys = {}
-    let keysName = name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-    let keysDesc = desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-    keys = keys.concat(keysName); keys = keys.concat(keysDesc); keys.push(userRecord.email.split("@")[0].split(".")[0]);
-    keys.forEach(key => {
-        if (key!=''){
-            objKeys[key] = true;
-        }
-    })
-    obj.keys = objKeys;
+    obj.dateTime = helpers.dateTimeNum(date,time);
+    obj.keys = helpers.getKeysObj(name, desc, userRecord.email);
     if (attachments) obj.attachments = attachments;
     if (emailRecipients) {
         obj.emailRecipients = emailRecipients;
@@ -132,7 +109,6 @@ router.post('/', authMiddleware, (req, res) => {
     }
     let newEventRef = eventRef.push();
     let newEventID = newEventRef.key;
-    console.log(newEventID);
     newEventRef.set(obj);
     sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event", newEventID);
     res.json(obj);
@@ -190,7 +166,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                 updates[location + "venue"] = req.body.venue
                 updates[location + "date"] = req.body.date
                 updates[location + "time"] = req.body.time
-                updates[location + "dateTime"] = -1 * Number(req.body.date.split('/').reverse().join("") + req.body.time.replace(':',''));
+                updates[location + "dateTime"] = helpers.dateTimeNum(req.body.date, req.body.time);
                 if (req.body.attachments) {
                     updates[location + "attachments"] = req.body.attachments
                 }
@@ -211,17 +187,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                         db.ref(location + "emailRecipients").remove()
                     }
                 }
-                let keys = new Array;
-                let objKeys = {}
-                let keysName = req.body.name.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-                let keysDesc = req.body.desc.toLowerCase().split(/[ .:;?!#$~%,@^*`"&|()<>{}\[\]\r\n/\\]+/);
-                keys = keys.concat(keysName); keys = keys.concat(keysDesc);  keys.push(userRecord.email.split("@")[0].split(".")[0]);
-                keys.forEach(key => {
-                    if (key!=''){
-                        objKeys[key] = true;
-                    }
-                })
-                updates[location + "keys"] = objKeys;
+                updates[location + "keys"] = helpers.getKeysObj(req.body.name, req.body.desc, userRecord.email);;
                 db.ref().update(updates)
                 let editedEventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
                     if (snapshot.exists()) {
