@@ -58,5 +58,10 @@
     "coordinators": ["Shivam Kumar", "Ankush Pandey", "Lokesh Naik"],
     "email": "sports.council@iiita.ac.in",
     "name": "Sports Council"
+  },
+  "aparoksha": {
+    "coordinators": ["Ekansh Bansal", "Animesh Jha"],
+    "email": "team.aparoksha@iiita.ac.in",
+    "name": "Aparoksha"
   }
 }
