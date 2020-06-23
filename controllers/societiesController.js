@@ -48,12 +48,12 @@ router.get('/:uid/events', (req, res) => {
     const eventsRef = db.ref('events').orderByChild("dateTime").once("value", snapshot => {
         if (snapshot.exists()) {
             let obj = new Object;
-            snapshot.forEach( child => {
+            snapshot.forEach(child => {
                 let inNumber = helpers.numericCurrentTime();
                 if (child.val().dateTime > inNumber) {
                     return;
                 }
-                if (child.val().byID === req.params.uid){
+                if (child.val().byID === req.params.uid) {
                     obj[child.key] = child.val();
                 }
             });
@@ -70,42 +70,46 @@ router.get('/:uid/events', (req, res) => {
 
 router.post('/check', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
-    const initials = userRecord.email.split("@")[0].split(".")[0];
-    let societyRef = db.ref(`societies/${initials}`).once("value", snapshot => {
+    let societyRef = db.ref(`societies`).once("value", snapshot => {
         if (snapshot.exists()) {
-            let society = snapshot.val()
-            if (!society.uid) {
-                const updates = {};
-                updates[`/societies/${initials}/uid`] = userRecord.uid;
-                db.ref().update(updates);
-            }
-            res.json({
-                society: true,
-                uid: userRecord.uid
-            })
-        } else {
-            const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
-                if (snapshot.exists()) {
-                    console.log("User already exists")
-                    console.log(snapshot.val())
-                    res.json({
-                        society: false,
-                        uid: userRecord.uid
-                    })
-                } else {
-                    const user = userRecord.toJSON();
-                    const obj = {
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName
-                    };
-                    admin.database().ref('users/').push(obj);
-                    res.json({
-                        society: false,
-                        uid: user.uid
-                    })
+            let societies = snapshot.val();
+            let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
+            if (initials.length) {
+                console.log(initials)
+                initials = initials[0];
+                if (!societies[initials].uid) {
+                    const updates = {};
+                    updates[`/societies/${initials}/uid`] = userRecord.uid;
+                    db.ref().update(updates);
                 }
-            });
+                res.json({
+                    society: true,
+                    uid: userRecord.uid
+                })
+            } else {
+                const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+                    if (snapshot.exists()) {
+                        console.log("User already exists")
+                        console.log(snapshot.val())
+                        res.json({
+                            society: false,
+                            uid: userRecord.uid
+                        })
+                    } else {
+                        const user = userRecord.toJSON();
+                        const obj = {
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName
+                        };
+                        admin.database().ref('users/').push(obj);
+                        res.json({
+                            society: false,
+                            uid: user.uid
+                        })
+                    }
+                });
+            }
         }
     })
 })

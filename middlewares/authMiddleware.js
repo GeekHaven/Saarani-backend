@@ -1,6 +1,6 @@
 let admin = require("../initFirebase.js");
 
-const authMiddleware  = (req, res, next) => {
+const authMiddleware = (req, res, next) => {
     let idToken = req.body.token;
     admin.auth().verifyIdToken(idToken)
         .then(decodedToken => {
