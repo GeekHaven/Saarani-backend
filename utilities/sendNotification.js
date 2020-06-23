@@ -9,7 +9,7 @@ function sendNotification(title, body, image, subtext, topic, eventID, del = fal
             image: image,
             subtext: subtext,
             eventID: eventID,
-            del: (del===true)? '1' : '0'
+            del: (del === true) ? '1' : '0'
         },
         topic: topic
     };

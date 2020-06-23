@@ -21,13 +21,13 @@ router.get('/', (req, res) => {
         key = String(key).toLowerCase();
         var eventRef = db.ref(`events`).orderByChild("dateTime").once("value", (snapshot) => {
             let obj = new Object;
-            snapshot.forEach( child => {
+            snapshot.forEach(child => {
                 let inNumber = helpers.numericCurrentTime();
                 if (child.val().dateTime > inNumber) {
                     return;
                 }
-                if (child.val().keys){
-                    if (child.val().keys[key]){
+                if (child.val().keys) {
+                    if (child.val().keys[key]) {
                         obj[child.key] = child.val();
                     }
                 }
@@ -39,11 +39,11 @@ router.get('/', (req, res) => {
             res.json({
                 error: error.code
             });
-        }) 
+        })
     } else {
         var eventRef = db.ref("events").orderByChild("dateTime").once("value", (snapshot) => {
             let obj = new Object;
-            snapshot.forEach( child => {
+            snapshot.forEach(child => {
                 let inNumber = helpers.numericCurrentTime();
                 if (child.val().dateTime > inNumber) {
                     return;
@@ -100,7 +100,7 @@ router.post('/', authMiddleware, (req, res) => {
     obj.venue = venue;
     obj.date = date;
     obj.time = time;
-    obj.dateTime = helpers.dateTimeNum(date,time);
+    obj.dateTime = helpers.dateTimeNum(date, time);
     obj.keys = helpers.getKeysObj(name, desc, userRecord.email);
     if (attachments) obj.attachments = attachments;
     if (emailRecipients) {
@@ -173,8 +173,8 @@ router.put('/:id', authMiddleware, (req, res) => {
                 let oldRecipients = event.emailRecipients
                 let newRecipients = req.body.emailRecipients;
                 let eventCancelledFor = {};
-                if(oldRecipients) {
-                    if(newRecipients) {
+                if (oldRecipients) {
+                    if (newRecipients) {
                         eventCancelledFor = oldRecipients.filter(n => !newRecipients.includes(n));
                     } else {
                         eventCancelledFor = oldRecipients;
