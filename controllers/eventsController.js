@@ -91,6 +91,7 @@ router.post('/', authMiddleware, (req, res) => {
     let time = req.body.time;
     let attachments = req.body.attachments;
     let emailRecipients = req.body.emailRecipients;
+    let socTopic = "Event";
     let eventRef = ref.child("events");
     let obj = {};
     obj.name = name;
@@ -110,8 +111,19 @@ router.post('/', authMiddleware, (req, res) => {
     let newEventRef = eventRef.push();
     let newEventID = newEventRef.key;
     newEventRef.set(obj);
-    sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, "Event", newEventID);
-    res.json(obj);
+    db.ref(`societies`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            let societies = snapshot.val();
+            let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
+            if (initials.length) {
+                console.log(initials);
+                socTopic = initials[0];
+            }
+        }
+        console.log("Sending notification to " + socTopic);
+        sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, socTopic, newEventID);
+        res.json(obj);
+    });
 })
 
 router.delete('/:id', authMiddleware, (req, res) => {
@@ -120,6 +132,7 @@ router.delete('/:id', authMiddleware, (req, res) => {
         if (snapshot.exists()) {
             const event = snapshot.val();
             if (event.byID == userRecord.uid) {
+                let socTopic = "Event";
                 let markedBy = event.markedBy;
                 if (markedBy) {
                     let dbUserIDs = Object.keys(markedBy);
@@ -131,8 +144,19 @@ router.delete('/:id', authMiddleware, (req, res) => {
                 if (event.emailRecipients) {
                     sendEmail(event.emailRecipients, event, "Event Cancelled: ")
                 }
-                sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, "Event", req.params.id, true);
-                res.sendStatus(200);
+                db.ref(`societies`).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        let societies = snapshot.val();
+                        let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
+                        if (initials.length) {
+                            console.log(initials);
+                            socTopic = initials[0];
+                        }
+                    }
+                    console.log("Sending notification to " + socTopic);
+                    sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, socTopic, req.params.id, true);
+                    res.sendStatus(200);
+                });
             } else {
                 console.log("Not Authorized");
                 res.json({
@@ -170,6 +194,7 @@ router.put('/:id', authMiddleware, (req, res) => {
                 if (req.body.attachments) {
                     updates[location + "attachments"] = req.body.attachments
                 }
+                let socTopic = "Event";
                 let oldRecipients = event.emailRecipients
                 let newRecipients = req.body.emailRecipients;
                 let eventCancelledFor = {};
@@ -196,8 +221,19 @@ router.put('/:id', authMiddleware, (req, res) => {
                         if (eventCancelledFor.length) sendEmail(eventCancelledFor, snapshot.val(), "Event Attendees Updated: ")
                     }
                 })
-                sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, "Event", req.params.id);
-                res.sendStatus(200);
+                db.ref(`societies`).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        let societies = snapshot.val();
+                        let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
+                        if (initials.length) {
+                            console.log(initials);
+                            socTopic = initials[0];
+                        }
+                    }
+                    console.log("Sending notification to " + socTopic);
+                    sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, socTopic, req.params.id);
+                    res.sendStatus(200);
+                });
             } else {
                 console.log("Not Authorized")
                 res.json({
@@ -219,11 +255,23 @@ router.post('/:id/remind', authMiddleware, (req, res) => {
         if (snapshot.exists()) {
             const event = snapshot.val();
             if (event.byID == userRecord.uid) {
+                let socTopic = "Event";
                 if (event.emailRecipients) {
                     sendEmail(event.emailRecipients, event, "Event Reminder: ")
                 }
-                sendNotification("Event Reminder: " + event.name, event.venue + " \n" + event.date + " \n" + event.time, userRecord.photoURL, event.byName, "Event");
-                res.sendStatus(200);
+                db.ref(`societies`).once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        let societies = snapshot.val();
+                        let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
+                        if (initials.length) {
+                            console.log(initials);
+                            socTopic = initials[0];
+                        }
+                    }
+                    console.log("Sending notification to " + socTopic);
+                    sendNotification("Event Reminder: " + event.name, event.venue + " \n" + event.date + " \n" + event.time, userRecord.photoURL, event.byName, socTopic, req.params.id);
+                    res.sendStatus(200);
+                });
             } else {
                 console.log("Not Authorized");
                 res.json({
