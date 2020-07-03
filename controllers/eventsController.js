@@ -324,25 +324,32 @@ router.post('/:id/mark', authMiddleware, (req, res) => {
     })
 })
 
-router.post('/marked', (req, res) => {
+router.post('/marked', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
     const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
         if (snapshot.exists()) {
             let dbUserID = Object.keys(snapshot.val())[0];
             let interestedEvents = snapshot.val()[dbUserID].marked;
-            let eventRef = ref.child("events").once("value", (snapshot) => {
-                let message = {};
-                Object.keys(interestedEvents).forEach(eventKey => {
-                    message[eventKey] = snapshot.val()[eventKey];
-                    message[eventKey].markedAs = interestedEvents[eventKey];
-                })
-                res.json(message);
-            }, (error) => {
-                console.log(`The read failed: ${error.code}`);
-                res.json({
-                    error: error.code
+            if (interestedEvents){
+                let eventRef = ref.child("events").once("value", (snapshot) => {
+                    let message = {};
+                    Object.keys(interestedEvents).forEach(eventKey => {
+                        message[eventKey] = snapshot.val()[eventKey];
+                        message[eventKey].markedAs = interestedEvents[eventKey];
+                    })
+                    res.json(message);
+                }, (error) => {
+                    console.log(`The read failed: ${error.code}`);
+                    res.json({
+                        error: error.code
+                    });
                 });
-            });
+            } else {
+                console.log("No events marked");
+                res.json({
+                    msg: "No events marked"
+                });
+            }
         } else {
             console.log("User does not exist")
             res.json({
