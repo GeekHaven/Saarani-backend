@@ -318,7 +318,35 @@ router.post('/:id/mark', authMiddleware, (req, res) => {
         } else {
             console.log("Event does not exist")
             res.json({
-                error: "Event does not exists"
+                error: "Event does not exist"
+            })
+        }
+    })
+})
+
+router.delete('/:id/mark', authMiddleware, (req, res) => {
+    let userRecord = res.locals.userRecord;
+    let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
+        if (snapshot.exists()) {
+            const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+                if (snapshot.exists()) {
+                    console.log(Object.keys(snapshot.val()))
+                    dbEventID = req.params.id;
+                    dbUserID = Object.keys(snapshot.val())[0];
+                    db.ref(`/users/${dbUserID}/marked/${dbEventID}`).remove();
+                    db.ref(`/events/${dbEventID}/markedBy/${dbUserID}`).remove();
+                    res.sendStatus(200);
+                } else {
+                    console.log("User does not exist")
+                    res.json({
+                        error: "User does not exist"
+                    })
+                }
+            })
+        } else {
+            console.log("Event does not exist")
+            res.json({
+                error: "Event does not exist"
             })
         }
     })
