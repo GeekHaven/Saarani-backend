@@ -346,9 +346,7 @@ router.post('/marked', authMiddleware, (req, res) => {
                 });
             } else {
                 console.log("No events marked");
-                res.json({
-                    msg: "No events marked"
-                });
+                res.json({});
             }
         } else {
             console.log("User does not exist")
