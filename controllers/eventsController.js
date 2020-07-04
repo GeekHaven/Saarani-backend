@@ -126,7 +126,7 @@ router.post('/', authMiddleware, (req, res) => {
     });
 })
 
-router.delete('/:id', authMiddleware, (req, res) => {
+router.post('/:id/delete', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
         if (snapshot.exists()) {
@@ -324,7 +324,7 @@ router.post('/:id/mark', authMiddleware, (req, res) => {
     })
 })
 
-router.delete('/:id/mark', authMiddleware, (req, res) => {
+router.post('/:id/mark/delete', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
     let eventRef = db.ref(`events/${req.params.id}`).once("value", snapshot => {
         if (snapshot.exists()) {
