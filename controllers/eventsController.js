@@ -354,35 +354,40 @@ router.delete('/:id/mark', authMiddleware, (req, res) => {
 
 router.post('/marked', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
-    const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
-        if (snapshot.exists()) {
-            let dbUserID = Object.keys(snapshot.val())[0];
-            let interestedEvents = snapshot.val()[dbUserID].marked;
-            if (interestedEvents){
-                let eventRef = ref.child("events").once("value", (snapshot) => {
-                    let message = {};
+    let eventRef = ref.child("events").orderByChild("dateTime").once("value", (snapshot) => {
+        let obj = new Object;
+        snapshot.forEach(child => {
+            let inNumber = helpers.numericCurrentTime();
+            if (child.val().dateTime > inNumber) {
+                return;
+            }
+            obj[child.key] = child.val();
+        });
+        let message = helpers.reverseJSON(obj);
+        const userRef = db.ref('users/').orderByChild("uid").equalTo(userRecord.uid).once("value", (snapshot) => {
+            if (snapshot.exists()) {
+                let dbUserID = Object.keys(snapshot.val())[0];
+                let interestedEvents = snapshot.val()[dbUserID].marked;
+                if(interestedEvents) {
                     Object.keys(interestedEvents).forEach(eventKey => {
-                        message[eventKey] = snapshot.val()[eventKey];
                         message[eventKey].markedAs = interestedEvents[eventKey];
                     })
-                    res.json(message);
-                }, (error) => {
-                    console.log(`The read failed: ${error.code}`);
-                    res.json({
-                        error: error.code
-                    });
-                });
+                }
+                res.json(message);
             } else {
-                console.log("No events marked");
-                res.json({});
+                console.log("User does not exist")
+                res.json({
+                    error: "User does not exist"
+                })
             }
-        } else {
-            console.log("User does not exist")
-            res.json({
-                error: "User does not exist"
-            })
-        }
-    })
+        })
+    }, (error) => {
+        console.log(`The read failed: ${error.code}`);
+        res.json({
+            error: error.code
+        });
+    });
+    
 })
 
 module.exports = router;
