@@ -1,6 +1,6 @@
-# Saarani-backend
+# Caliiita-backend
 
-The backend for common schedule app of IIITA, Saarani
+The backend for common schedule app of IIITA, Caliiita
 
 ### Installation
 

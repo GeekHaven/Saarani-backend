@@ -370,7 +370,9 @@ router.post('/marked', authMiddleware, (req, res) => {
                 let interestedEvents = snapshot.val()[dbUserID].marked;
                 if(interestedEvents) {
                     Object.keys(interestedEvents).forEach(eventKey => {
-                        message[eventKey].markedAs = interestedEvents[eventKey];
+                        if(message[eventKey]) {
+                            message[eventKey].markedAs = interestedEvents[eventKey];
+                        }
                     })
                 }
                 res.json(message);
