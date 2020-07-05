@@ -377,10 +377,7 @@ router.post('/marked', authMiddleware, (req, res) => {
                 }
                 res.json(message);
             } else {
-                console.log("User does not exist")
-                res.json({
-                    error: "User does not exist"
-                })
+                res.json(message);
             }
         })
     }, (error) => {
