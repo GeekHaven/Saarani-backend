@@ -2,7 +2,7 @@ const moment = require('moment-timezone');
 
 const numericCurrentTime = () => {
     let curr = moment().tz('Asia/Kolkata').format("YYYYMMDDHHmm");
-    return "-" + curr;
+    return Number("-" + curr);
 }
 
 const reverseJSON = (obj) => {
