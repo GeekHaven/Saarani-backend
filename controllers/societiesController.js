@@ -25,8 +25,8 @@ router.get('/', (req, res) => {
     });
 })
 
-router.get('/:uid', (req, res) => {
-    const societyRef = db.ref('societies/').orderByChild("uid").equalTo(req.params.uid).once("value", snapshot => {
+router.get('/:name', (req, res) => {
+    const societyRef = db.ref(`societies/${req.params.name}`).once("value", snapshot => {
         if (snapshot.exists()) {
             let society = snapshot.val();
             res.json(society)
@@ -44,21 +44,41 @@ router.get('/:uid', (req, res) => {
     })
 })
 
-router.get('/:uid/events', (req, res) => {
-    const eventsRef = db.ref('events').orderByChild("dateTime").once("value", snapshot => {
+router.get('/:name/events', (req, res) => {
+    const societyRef = db.ref(`societies/${req.params.name}`).once("value", snapshot => {
         if (snapshot.exists()) {
-            let obj = new Object;
-            snapshot.forEach(child => {
-                let inNumber = helpers.numericCurrentTime();
-                if (child.val().dateTime > inNumber) {
-                    return;
-                }
-                if (child.val().byID === req.params.uid) {
-                    obj[child.key] = child.val();
-                }
+            let society = snapshot.val();
+            if(!society.uid) {
+                console.log("Society hasn't logged in, no events.")
+                res.json({});
+            } else {
+                const eventsRef = db.ref('events').orderByChild("dateTime").once("value", snapshot => {
+                    if (snapshot.exists()) {
+                        let obj = new Object;
+                        snapshot.forEach(child => {
+                            let inNumber = helpers.numericCurrentTime();
+                            if (child.val().dateTime > inNumber) {
+                                return;
+                            }
+                            if (child.val().byID === society.uid) {
+                                obj[child.key] = child.val();
+                            }
+                        });
+                        let revObj = helpers.reverseJSON(obj);
+                        res.json(revObj);
+                    }
+                }, (error) => {
+                    console.log(`The read failed: ${error.code}`);
+                    res.json({
+                        error: error.code
+                    });
+                })
+            }
+        } else {
+            console.log("Society does not exist");
+            res.json({
+                error: "Society does not exist"
             });
-            let revObj = helpers.reverseJSON(obj);
-            res.json(revObj);
         }
     }, (error) => {
         console.log(`The read failed: ${error.code}`);
