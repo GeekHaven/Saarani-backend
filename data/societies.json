@@ -2,71 +2,85 @@
   "geekhaven": {
     "coordinators": ["Manthan Raju Surkar", "Prateek Mishra"],
     "email": "geekhaven@iiita.ac.in",
-    "name": "Geekhaven"
+    "name": "Geekhaven",
+    "desc": "Technical Society"
   },
   "nirmiti": {
     "coordinators": ["Keshab Agrawal", "Amandeep Sokhal", "Nehal Singh"],
     "email": "nirmiti@iiita.ac.in",
-    "name": "Nirmiti"
+    "name": "Nirmiti",
+    "desc": "Fine Arts Society"
   },
   "tesla": {
     "coordinators": ["Pranjal Maurya", "Anurag Kumar"],
     "email": "tesla@iiita.ac.in",
-    "name": "Tesla"
+    "name": "Tesla",
+    "desc": "Electronics Society"
   },
   "rangtarangini": {
     "coordinators": ["Palak Mittal", "Naukesh Goyal", "Divyansh Bhorvanshi"],
     "email": "rangtarangini.society@iiita.ac.in",
-    "name": "Rangtarangini"
+    "name": "Rangtarangini",
+    "desc": "Drama Society"
   },
   "ams": {
     "coordinators": ["Nikhilesh Kumar", "Devavath Mahesh", "Aditya Kamble"],
     "email": "ams.society@iiita.ac.in",
-    "name": "Acoustics and Media Society"
+    "name": "Acoustics and Media Society",
+    "desc": "Photography/Videography Society"
   },
   "dance": {
     "coordinators": ["Jahanvi Singh Bhadoria", "Akash Manhas", "Rahul Reddy Muppidi"],
     "email": "dance.society@iiita.ac.in",
-    "name": "Dance Society"
+    "name": "Geneticx Crew",
+    "desc": "Dance Society"
   },
   "sarasva": {
     "coordinators": ["Abhigyan Sharma", "Ananya Aparajita Mohanty", "Giriraj Chandak"],
     "email": "sarasva.society@iiita.ac.in",
-    "name": "Sarasva"
+    "name": "Sarasva",
+    "desc": "Literary Society"
   },
   "virtuosi": {
     "coordinators": ["Vidur Kataria", "Parag Goyal", "Kartic Choubey"],
     "email": "virtuosi.society@iiita.ac.in",
-    "name": "Virtuosi"
+    "name": "Virtuosi",
+    "desc": "Music Society"
   },
   "effervescence": {
     "coordinators": ["Shashwat Sinha"],
     "email": "effervescence@iiita.ac.in",
-    "name": "Effervescence"
+    "name": "Effervescence",
+    "desc": "Cultural Festival"
   },
   "iiic": {
     "coordinators": ["Aadya Sharma", "Sagar Lakhani"],
     "email": "iiic@iiita.ac.in",
-    "name": "IIITA Info Communication Incubation Center"
+    "name": "IIITA Info Communication Incubation Center",
+    "desc": "Business Incubator"
   },
   "gymkhana": {
     "coordinators": ["Harsh Bhardwaj"],
     "email": "gymkhana@iiita.ac.in",
-    "name": "Gymkhana"
+    "name": "Gymkhana",
+    "desc": "Students' Council"
   },
   "sports": {
     "coordinators": ["Shivam Kumar", "Ankush Pandey", "Lokesh Naik"],
     "email": "sports.council@iiita.ac.in",
-    "name": "Sports Council"
+    "name": "Spirit",
+    "desc": "Sports Society"
   },
   "aparoksha": {
     "coordinators": ["Ekansh Bansal", "Animesh Jha"],
     "email": "team.aparoksha@iiita.ac.in",
-    "name": "Aparoksha"
+    "name": "Aparoksha",
+    "desc": "Technical Festival"
   },
   "asmita": {
     "coordinators": ["Arshpreet Singh", "Tanmay Malu"],
     "email": "asmita@iiita.ac.in",
-    "name": "Asmita"
+    "name": "Asmita",
+    "desc": "Sports Festival"
   }
 }
