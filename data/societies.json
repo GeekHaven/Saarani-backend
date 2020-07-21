@@ -26,8 +26,8 @@
   "ams": {
     "coordinators": ["Nikhilesh Kumar", "Devavath Mahesh", "Aditya Kamble"],
     "email": "ams.society@iiita.ac.in",
-    "name": "Acoustics and Media Society",
-    "desc": "Photography/Videography Society"
+    "name": "AMS",
+    "desc": "Media Society"
   },
   "dance": {
     "coordinators": ["Jahanvi Singh Bhadoria", "Akash Manhas", "Rahul Reddy Muppidi"],
@@ -56,7 +56,7 @@
   "iiic": {
     "coordinators": ["Aadya Sharma", "Sagar Lakhani"],
     "email": "iiic@iiita.ac.in",
-    "name": "IIITA Info Communication Incubation Center",
+    "name": "IIIC",
     "desc": "Business Incubator"
   },
   "gymkhana": {
