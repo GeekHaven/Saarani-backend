@@ -107,5 +107,11 @@
     "desc": "Sports Festival",
     "insta": "asmita_iiita",
     "fb": "https://www.facebook.com/asmitaiiita/"
+  },
+  "gravity": {
+    "coordinators": ["Paawan Kumar", "Shefali Vinod Ramteke"],
+    "email": "gravity@iiita.ac.in",
+    "name": "Gravity",
+    "desc": "Applied Sciences Society"
   }
 }

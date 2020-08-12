@@ -157,7 +157,9 @@ router.post('/:id/delete', authMiddleware, (req, res) => {
                     }
                     console.log("Sending notification to " + socTopic);
                     sendNotification("Event Cancelled: " + event.name, "Update from " + event.byName, userRecord.photoURL, event.byName, socTopic, req.params.id, true);
-                    res.sendStatus(200);
+                    res.json({
+                        status: "200"
+                    });
                 });
             } else {
                 console.log("Not Authorized");
@@ -234,7 +236,9 @@ router.put('/:id', authMiddleware, (req, res) => {
                     }
                     console.log("Sending notification to " + socTopic);
                     sendNotification("Event Updated: " + req.body.name, req.body.venue + " \n" + req.body.date + " \n" + req.body.time, userRecord.photoURL, event.byName, socTopic, req.params.id);
-                    res.sendStatus(200);
+                    res.json({
+                        status: "200"
+                    });
                 });
             } else {
                 console.log("Not Authorized")
@@ -272,7 +276,9 @@ router.post('/:id/remind', authMiddleware, (req, res) => {
                     }
                     console.log("Sending notification to " + socTopic);
                     sendNotification("Event Reminder: " + event.name, event.venue + " \n" + event.date + " \n" + event.time, userRecord.photoURL, event.byName, socTopic, req.params.id);
-                    res.sendStatus(200);
+                    res.json({
+                        status: "200"
+                    });
                 });
             } else {
                 console.log("Not Authorized");
@@ -309,7 +315,9 @@ router.post('/:id/mark', authMiddleware, (req, res) => {
                     db.ref().update(updatesUser)
                     updatesEvent[`/events/${dbEventID}/markedBy/${dbUserID}`] = req.body.mark;
                     db.ref().update(updatesEvent)
-                    res.sendStatus(200);
+                    res.json({
+                        status: "200"
+                    });
                 } else {
                     console.log("User does not exist")
                     res.json({
@@ -337,7 +345,9 @@ router.post('/:id/mark/delete', authMiddleware, (req, res) => {
                     dbUserID = Object.keys(snapshot.val())[0];
                     db.ref(`/users/${dbUserID}/marked/${dbEventID}`).remove();
                     db.ref(`/events/${dbEventID}/markedBy/${dbUserID}`).remove();
-                    res.sendStatus(200);
+                    res.json({
+                        status: "200"
+                    });
                 } else {
                     console.log("User does not exist")
                     res.json({
