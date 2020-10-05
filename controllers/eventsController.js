@@ -6,6 +6,7 @@ let helpers = require("../helpers/helpers")
 const express = require("express");
 const router = express.Router();
 const bodyParser = require("body-parser");
+const bucket = admin.storage().bucket();
 
 router.use(bodyParser.urlencoded({
     extended: true
@@ -141,6 +142,18 @@ router.post('/:id/delete', authMiddleware, (req, res) => {
                     dbUserIDs.forEach(dbUserID => {
                         db.ref(`users/${dbUserID}/marked/${req.params.id}`).remove();
                     })
+                }
+                let attachments = event.attachments;
+                if (attachments) {
+                    for(let fileName in attachments) {
+                        let fileURL = attachments[fileName];
+                        let file = fileURL.split("files%2F")[1].split("?alt")[0];
+                        try {
+                            bucket.file("files/" + file).delete();
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
                 }
                 db.ref(`events/${req.params.id}`).remove();
                 if (event.emailRecipients) {
