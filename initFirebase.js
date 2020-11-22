@@ -4,8 +4,8 @@ const serviceAccount = require("./serviceAccountKey.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://calendarapp-680df.firebaseio.com",
-    storageBucket: 'gs://calendarapp-680df.appspot.com'
+    databaseURL: "https://caliiita-8f11d.firebaseio.com",
+    storageBucket: 'gs://caliiita-8f11d.appspot.com'
 });
 
 module.exports = admin
