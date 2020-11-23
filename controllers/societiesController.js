@@ -66,6 +66,9 @@ router.get('/:name/events', (req, res) => {
                         });
                         let revObj = helpers.reverseJSON(obj);
                         res.json(revObj);
+                    } else {
+                        console.log("Society has no events");
+                        res.json({});
                     }
                 }, (error) => {
                     console.log(`The read failed: ${error.code}`);
