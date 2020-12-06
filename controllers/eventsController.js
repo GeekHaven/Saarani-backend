@@ -83,50 +83,61 @@ router.get('/:id', (req, res) => {
 
 router.post('/', authMiddleware, (req, res) => {
     let userRecord = res.locals.userRecord;
-    let name = req.body.name;
-    let byID = userRecord.uid;
-    let byName = userRecord.displayName;
-    let photoURL = userRecord.photoURL;
-    let desc = req.body.desc;
-    let venue = req.body.venue;
-    let date = req.body.date;
-    let time = req.body.time;
-    let attachments = req.body.attachments;
-    let emailRecipients = req.body.emailRecipients;
-    let socTopic = "Event";
-    let eventRef = ref.child("events");
-    let obj = {};
-    obj.name = name;
-    obj.byID = byID;
-    obj.byName = byName;
-    obj.photoURL = photoURL;
-    obj.desc = desc;
-    obj.venue = venue;
-    obj.date = date;
-    obj.time = time;
-    obj.dateTime = helpers.dateTimeNum(date, time);
-    obj.keys = helpers.getKeysObj(name, desc, userRecord.email);
-    if (attachments) obj.attachments = attachments;
-    if (emailRecipients) {
-        obj.emailRecipients = emailRecipients;
-        sendEmail(emailRecipients, obj, "New Event: ")
-    }
-    let newEventRef = eventRef.push();
-    let newEventID = newEventRef.key;
-    newEventRef.set(obj);
-    db.ref(`societies`).once("value", snapshot => {
+    let societyRef = db.ref(`societies`).once("value", snapshot => {
         if (snapshot.exists()) {
             let societies = snapshot.val();
             let initials = userRecord.email.split(/[.@]+/).filter(n => n in societies);
             if (initials.length) {
-                console.log(initials);
-                socTopic = initials[0];
+                console.log(initials)
+                let socTopic = initials[0];
+                let name = req.body.name;
+                let byID = userRecord.uid;
+                let byName = userRecord.displayName;
+                let photoURL = userRecord.photoURL;
+                let desc = req.body.desc;
+                let venue = req.body.venue;
+                let date = req.body.date;
+                let time = req.body.time;
+                let attachments = req.body.attachments;
+                let emailRecipients = req.body.emailRecipients;
+                let eventRef = ref.child("events");
+                let obj = {};
+                obj.name = name;
+                obj.byID = byID;
+                obj.byName = byName;
+                obj.photoURL = photoURL;
+                obj.desc = desc;
+                obj.venue = venue;
+                obj.date = date;
+                obj.time = time;
+                obj.dateTime = helpers.dateTimeNum(date, time);
+                obj.keys = helpers.getKeysObj(name, desc, userRecord.email);
+                if (attachments) obj.attachments = attachments;
+                if (emailRecipients) {
+                    obj.emailRecipients = emailRecipients;
+                    sendEmail(emailRecipients, obj, "New Event: ")
+                }
+                let newEventRef = eventRef.push();
+                let newEventID = newEventRef.key;
+                newEventRef.set(obj);
+                console.log("Sending notification to " + socTopic);
+                sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, socTopic, newEventID);
+                res.json(obj);
+            } else {
+                console.log("Not a Society");
+                res.json({
+                    error: "Not a Society"
+                });
             }
+        } else {
+            console.log("No societies in database.");
+            res.json({
+                error: "No societies in database."
+            });
         }
-        console.log("Sending notification to " + socTopic);
-        sendNotification("New Event: " + name, venue + " \n" + date + " \n" + time, userRecord.photoURL, byName, socTopic, newEventID);
-        res.json(obj);
-    });
+    })
+
+
 })
 
 router.post('/:id/delete', authMiddleware, (req, res) => {
@@ -145,7 +156,7 @@ router.post('/:id/delete', authMiddleware, (req, res) => {
                 }
                 let attachments = event.attachments;
                 if (attachments) {
-                    for(let fileName in attachments) {
+                    for (let fileName in attachments) {
                         let fileURL = attachments[fileName];
                         let file = fileURL.split("files%2F")[1].split("?alt")[0];
                         try {
@@ -393,9 +404,9 @@ router.post('/marked', authMiddleware, (req, res) => {
             if (snapshot.exists()) {
                 let dbUserID = Object.keys(snapshot.val())[0];
                 let interestedEvents = snapshot.val()[dbUserID].marked;
-                if(interestedEvents) {
+                if (interestedEvents) {
                     Object.keys(interestedEvents).forEach(eventKey => {
-                        if(message[eventKey]) {
+                        if (message[eventKey]) {
                             message[eventKey].markedAs = interestedEvents[eventKey];
                         }
                     })
@@ -411,7 +422,7 @@ router.post('/marked', authMiddleware, (req, res) => {
             error: error.code
         });
     });
-    
+
 })
 
 module.exports = router;
