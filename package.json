@@ -22,6 +22,6 @@
     "express": "^4.17.1",
     "firebase-admin": "^8.12.1",
     "moment-timezone": "^0.5.31",
-    "nodemailer": "^6.4.10"
+    "nodemailer": "^6.4.16"
   }
 }
